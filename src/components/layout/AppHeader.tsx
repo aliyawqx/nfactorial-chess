@@ -41,6 +41,14 @@ export function AppHeader() {
             </li>
             <li>
               <Link
+                href="/play/online"
+                className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              >
+                {t.common.online}
+              </Link>
+            </li>
+            <li>
+              <Link
                 href="/games"
                 className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
               >
