@@ -22,18 +22,18 @@ const PIECE_MAP: Record<string, PieceType> = {
 };
 
 const COMMANDS: Array<{ pattern: RegExp; cmd: ParsedVoiceInput }> = [
-  { pattern: /\b(жаңа\s+ойын|жана\s+ойын|қайта\s+баста|кайта\s+баста)\b/, cmd: { kind: "command", command: "newGame" } },
-  { pattern: /\b(берілемін|берилемин|жеңіліс|женилис|сдаюсь)\b/, cmd: { kind: "command", command: "resign" } },
-  { pattern: /\b(теңдік|тендик|тең\s+ойын|тен\s+ойын|ничья)\b/, cmd: { kind: "command", command: "offerDraw" } },
-  { pattern: /\b(артқа|артка|қайтару|кайтару|болдырма)\b/, cmd: { kind: "command", command: "undo" } },
-  { pattern: /\b(қандай\s+жүрістер|кандай\s+журистер|көмек|комек|жүрістер|журистер)\b/, cmd: { kind: "command", command: "listMoves" } },
-  { pattern: /\b(позицияны\s+оқы|позицияны\s+оки)\b/, cmd: { kind: "command", command: "readPosition" } },
-  { pattern: /\b(тоқта|токта|тоқтату|токтату)\b/, cmd: { kind: "command", command: "stop" } },
-  { pattern: /\b(көмек|комек|анықтама|аныктама)\b/, cmd: { kind: "command", command: "help" } },
+  { pattern: /(жаңа\s+ойын|жана\s+ойын|қайта\s+баста|кайта\s+баста)/, cmd: { kind: "command", command: "newGame" } },
+  { pattern: /(берілемін|берилемин|жеңіліс|женилис|сдаюсь)/, cmd: { kind: "command", command: "resign" } },
+  { pattern: /(теңдік|тендик|тең\s+ойын|тен\s+ойын|ничья)/, cmd: { kind: "command", command: "offerDraw" } },
+  { pattern: /(артқа|артка|қайтару|кайтару|болдырма)/, cmd: { kind: "command", command: "undo" } },
+  { pattern: /(қандай\s+жүрістер|кандай\s+журистер|жүрістер|журистер)/, cmd: { kind: "command", command: "listMoves" } },
+  { pattern: /(позицияны\s+оқы|позицияны\s+оки)/, cmd: { kind: "command", command: "readPosition" } },
+  { pattern: /(тоқта|токта|тоқтату|токтату)/, cmd: { kind: "command", command: "stop" } },
+  { pattern: /(көмек|комек|анықтама|аныктама)/, cmd: { kind: "command", command: "help" } },
 ];
 
-const CASTLE_KINGSIDE = /\b(қысқа\s+рокировка|кыска\s+рокировка|шорт\s+рокировка|0-0(?!-?0))\b/;
-const CASTLE_QUEENSIDE = /\b(ұзын\s+рокировка|узын\s+рокировка|лонг\s+рокировка|0-0-0)\b/;
+const CASTLE_KINGSIDE = /(қысқа\s+рокировка|кыска\s+рокировка|шорт\s+рокировка|0-0(?!-?0))/;
+const CASTLE_QUEENSIDE = /(ұзын\s+рокировка|узын\s+рокировка|лонг\s+рокировка|0-0-0)/;
 
 const MOVE_REGEX =
   /(?:(?<piece>пешка|пешканы|ат|атты|пиль|пілі|пілшік|тұра|тура|тұраны|уәзір|уазир|ферзь|патша|патшаны|король)\s*)?(?:(?<from>[a-h][1-8])\s*(?:-(?:ке|ге|да|де|нан|нен|тан|тен))?\s*)?(?<to>[a-h][1-8])(?:-(?:ке|ге|да|де|нан|нен|тан|тен))?(?:\s*=\s*(?<promo>уәзір|тұра|пиль|ат|q|r|b|n))?/i;
@@ -50,7 +50,7 @@ export function parseKK(text: string): ParsedVoiceInput {
   const m = t.match(MOVE_REGEX);
   if (!m || !m.groups?.to) return { kind: "unknown", raw: text };
 
-  const capture = /\b(алады|алу|жейді|жеу)\b/.test(t);
+  const capture = /(алады|алу|жейді|жеу)/.test(t);
   return {
     kind: "move",
     piece: m.groups.piece ? PIECE_MAP[m.groups.piece] : undefined,

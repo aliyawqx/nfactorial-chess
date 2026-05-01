@@ -79,11 +79,16 @@ const NUMBER_WORDS_KK: Record<string, string> = {
 };
 
 function replaceWordMap(input: string, dict: Record<string, string>): string {
-  let out = input;
-  for (const [word, value] of Object.entries(dict)) {
-    out = out.replace(new RegExp(`\\b${word}\\b`, "gi"), value);
-  }
-  return out;
+  // Используем разбиение по пробелам и пунктуации — \b в JS не работает с кириллицей
+  // (кириллические буквы — non-word char без unicode flag, и \b ведёт себя неинтуитивно).
+  // Также сохраняем уже нормализованные клетки вида f3 (latin+digit) — их не трогаем.
+  return input
+    .split(/(\s+|[-,])/)
+    .map((token) => {
+      const lower = token.toLowerCase();
+      return dict[lower] ?? token;
+    })
+    .join("");
 }
 
 export function normalize(input: string, locale: "ru" | "en" | "kk"): string {
@@ -105,11 +110,27 @@ export function normalize(input: string, locale: "ru" | "en" | "kk"): string {
     s = replaceWordMap(s, NUMBER_WORDS_RU);
   }
 
-  // "ка пять" → "к5", "эф 3" → "f3" (склеить букву + цифру)
-  s = s.replace(/\b([a-h])\s+([1-8])\b/gi, "$1$2");
+  // Склейки кириллической буквы-файла с цифрой: "е4" (кир) → "e4" (lat)
+  // Отдельно — потому что split-by-whitespace не видит границы внутри слитого токена.
+  const cyrToLat: Record<string, string> = {
+    "а": "a",
+    "е": "e",
+    "ё": "e",
+  };
+  s = s.replace(
+    /([абвгдеёжзАБВГДЕЁЖЗ])([1-8])/g,
+    (m, letter: string, num: string) =>
+      cyrToLat[letter.toLowerCase()] ? cyrToLat[letter.toLowerCase()] + num : m,
+  );
+
+  // "эф 3" → "f3" (склеить букву + цифру через пробел)
+  s = s.replace(/([a-h])\s+([1-8])/gi, "$1$2");
 
   // "f3-ке", "e4-ге", "a1-да" → "f3", "e4", "a1" (казахские падежи)
-  s = s.replace(/\b([a-h][1-8])-(?:ке|ге|да|де|нан|нен|тан|тен)\b/gi, "$1");
+  s = s.replace(
+    /([a-h][1-8])-(?:ке|ге|да|де|нан|нен|тан|тен)/gi,
+    "$1",
+  );
 
   // Множественные пробелы
   s = s.replace(/\s+/g, " ").trim();
