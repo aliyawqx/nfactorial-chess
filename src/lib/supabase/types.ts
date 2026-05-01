@@ -152,7 +152,22 @@ export interface Database {
         Relationships: [];
       };
     };
-    Views: { [_ in never]: never };
+    Views: {
+      leaderboard: {
+        Row: {
+          id: string;
+          display_name: string | null;
+          city: string | null;
+          country: string;
+          elo: number;
+          games_played: number;
+          wins: number;
+          losses: number;
+          draws: number;
+        };
+        Relationships: [];
+      };
+    };
     Functions: { [_ in never]: never };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

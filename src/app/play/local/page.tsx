@@ -101,6 +101,14 @@ export default function LocalGamePage() {
         }
       : null;
 
+  const lastPlayedMove =
+    history.length > 0
+      ? {
+          san: history[history.length - 1].san,
+          color: history[history.length - 1].color as "w" | "b",
+        }
+      : null;
+
   const handleReset = useCallback(() => {
     if (history.length > 0 && !gameOver && !confirm(t.common.confirmReset)) {
       return;
@@ -151,6 +159,7 @@ export default function LocalGamePage() {
                   })
                 }
                 onCommand={handleVoiceCommand}
+                lastOpponentMove={lastPlayedMove}
               />
               <div className="flex flex-wrap gap-2">
                 <Button

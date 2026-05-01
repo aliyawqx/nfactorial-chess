@@ -180,6 +180,14 @@ export default function OnlineGamePage({ params }: PageProps) {
         }
       : null;
 
+  // Озвучивать ходы оппонента (не свои)
+  const lastOpponentMove = (() => {
+    if (history.length === 0 || !myColor) return null;
+    const last = history[history.length - 1];
+    if (last.color === myColor) return null;
+    return { san: last.san, color: last.color as "w" | "b" };
+  })();
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -330,6 +338,7 @@ export default function OnlineGamePage({ params }: PageProps) {
                     : null
                 }
                 onCommand={handleVoiceCommand}
+                lastOpponentMove={lastOpponentMove}
               />
 
               <div className="flex flex-wrap gap-2">
