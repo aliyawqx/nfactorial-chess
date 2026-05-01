@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { LanguageToggle } from "@/components/i18n/LanguageToggle";
+import { UserMenu, MobileAuthLinks } from "@/components/auth/UserMenu";
 import { useT } from "@/lib/i18n/I18nProvider";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +70,7 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <UserMenu />
           <LanguageToggle />
           <ThemeToggle />
           {/* Mobile burger */}
@@ -108,6 +110,9 @@ export function AppHeader() {
                     </li>
                   ))}
                 </ul>
+                <div className="border-t" onClick={() => setOpen(false)}>
+                  <MobileAuthLinks />
+                </div>
               </nav>
             )}
           </div>
