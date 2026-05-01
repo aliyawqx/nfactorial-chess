@@ -557,4 +557,16 @@ export const dictionaries = {
   },
 } as const satisfies Record<Locale, unknown>;
 
-export type Dictionary = (typeof dictionaries)["ru"];
+type DeepWiden<T> = T extends string
+  ? string
+  : T extends number
+    ? number
+    : T extends boolean
+      ? boolean
+      : T extends readonly unknown[]
+        ? { [K in keyof T]: DeepWiden<T[K]> }
+        : T extends object
+          ? { [K in keyof T]: DeepWiden<T[K]> }
+          : T;
+
+export type Dictionary = DeepWiden<(typeof dictionaries)["ru"]>;
