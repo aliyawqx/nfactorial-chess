@@ -103,13 +103,14 @@ export default function AiGamePage() {
     onGameOver: handleGameOver,
   });
 
-  const lastOpponentMove = (() => {
-    if (history.length === 0) return null;
-    const last = history[history.length - 1];
-    const playerColorLetter = playerColor === "white" ? "w" : "b";
-    if (last.color === playerColorLetter) return null;
-    return { san: last.san, color: last.color as "w" | "b" };
-  })();
+  // Озвучиваем все ходы (и свои, и AI) — пользователь хочет каждый ход слышать
+  const lastPlayedMove =
+    history.length > 0
+      ? {
+          san: history[history.length - 1].san,
+          color: history[history.length - 1].color as "w" | "b",
+        }
+      : null;
 
   const handleResetRef = useRef<() => void>(() => {});
   const handleVoiceCommand = useCallback(
@@ -295,7 +296,7 @@ export default function AiGamePage() {
                     : null
                 }
                 onCommand={handleVoiceCommand}
-                lastOpponentMove={lastOpponentMove}
+                lastOpponentMove={lastPlayedMove}
               />
 
               <fieldset className="rounded-lg border bg-card p-3">

@@ -77,12 +77,20 @@ function LoginContent() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="password"
-                    className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground"
-                  >
-                    {t.auth.password}
-                  </label>
+                  <div className="mb-1.5 flex items-baseline justify-between">
+                    <label
+                      htmlFor="password"
+                      className="block text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                    >
+                      {t.auth.password}
+                    </label>
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs text-primary hover:underline"
+                    >
+                      {t.auth.forgotPassword}
+                    </Link>
+                  </div>
                   <input
                     id="password"
                     type="password"

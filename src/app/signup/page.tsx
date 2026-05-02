@@ -13,7 +13,7 @@ function SignupContent() {
   const { t } = useI18n();
   const router = useRouter();
   const params = useSearchParams();
-  const { signUp, isAnonymous, configured } = useAuth();
+  const { signUp, configured } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -82,15 +82,9 @@ function SignupContent() {
             <h1 className="mb-1 text-2xl font-semibold tracking-tight">
               {t.auth.signupTitle}
             </h1>
-            <p className="mb-4 text-sm text-muted-foreground">
+            <p className="mb-6 text-sm text-muted-foreground">
               {t.auth.signupSubtitle}
             </p>
-
-            {isAnonymous && (
-              <div className="mb-6 rounded-md bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
-                {t.auth.keepProgress}: {t.auth.anonymousNotice}
-              </div>
-            )}
 
             {!configured ? (
               <div className="rounded-md border border-dashed bg-secondary/40 p-4 text-sm text-muted-foreground">

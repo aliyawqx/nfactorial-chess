@@ -28,6 +28,8 @@ export interface UseAuthReturn {
   signIn: (params: SignInParams) => Promise<AuthResult>;
   signUp: (params: SignUpParams) => Promise<AuthResult>;
   signOut: () => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
 }
 
 export function useAuth(): UseAuthReturn {
@@ -54,11 +56,16 @@ export function useAuth(): UseAuthReturn {
       if (!configured) return { user: null, error: "Supabase не настроен" };
       const supabase = getSupabaseClient();
 
-      // Если текущий пользователь анонимный — конвертируем (привязываем email)
-      // через updateUser. Это сохраняет тот же auth.uid() и всю историю.
       const { data: currentSession } = await supabase.auth.getUser();
       const currentUser = currentSession.user;
 
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : undefined;
+
+      // Если есть anonymous-сеанс — конвертируем через updateUser:
+      // user.id сохраняется → история (комнаты, партии, ходы) не теряется.
+      // Текст письма Supabase отправляет по шаблону "Change Email Address" —
+      // его нужно переписать в Dashboard → Authentication → Email Templates.
       if (currentUser?.is_anonymous) {
         const { error } = await supabase.auth.updateUser({
           email,
@@ -67,11 +74,8 @@ export function useAuth(): UseAuthReturn {
         });
         if (error) return { user: null, error: error.message };
 
-        // После updateUser обычно требуется email confirmation.
-        // Если confirmation выключен — пользователь сразу не-анонимный.
         const { data: updated } = await supabase.auth.getUser();
 
-        // Также обновим profiles.display_name явно (триггер мог поставить "Гость")
         if (displayName && updated.user?.id) {
           await supabase
             .from("profiles")
@@ -82,22 +86,24 @@ export function useAuth(): UseAuthReturn {
         return {
           user: updated.user,
           error: null,
+          // Если email confirmation в Supabase включена — пользователь
+          // остаётся anonymous пока не подтвердит email.
           needsConfirmation: !updated.user || updated.user.is_anonymous,
         };
       }
 
-      // Обычная регистрация (анонимный сеанс отсутствует или уже не-anon)
+      // Обычная регистрация (без предыдущего anonymous-сеанса)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: displayName ? { display_name: displayName } : undefined,
+          emailRedirectTo: origin ? `${origin}/auth/callback` : undefined,
         },
       });
       if (error) return { user: null, error: error.message };
 
-      // Если сразу есть user (confirmation выключен) — подкорректируем display_name в profiles
-      if (data.user?.id && displayName) {
+      if (data.user?.id && data.session && displayName) {
         await supabase
           .from("profiles")
           .update({ display_name: displayName })
@@ -107,8 +113,32 @@ export function useAuth(): UseAuthReturn {
       return {
         user: data.user,
         error: null,
-        needsConfirmation: !data.session, // нет session → ждём подтверждения email
+        needsConfirmation: !data.session,
       };
+    },
+    [configured],
+  );
+
+  const requestPasswordReset = useCallback(
+    async (email: string): Promise<{ error: string | null }> => {
+      if (!configured) return { error: "Supabase не настроен" };
+      const supabase = getSupabaseClient();
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : undefined;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: origin ? `${origin}/reset-password` : undefined,
+      });
+      return { error: error?.message ?? null };
+    },
+    [configured],
+  );
+
+  const updatePassword = useCallback(
+    async (newPassword: string): Promise<{ error: string | null }> => {
+      if (!configured) return { error: "Supabase не настроен" };
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      return { error: error?.message ?? null };
     },
     [configured],
   );
@@ -127,5 +157,7 @@ export function useAuth(): UseAuthReturn {
     signIn,
     signUp,
     signOut,
+    requestPasswordReset,
+    updatePassword,
   };
 }

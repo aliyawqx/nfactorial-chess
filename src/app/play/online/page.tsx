@@ -60,7 +60,7 @@ export default function OnlineLobbyPage() {
             {t.online.title}
           </h1>
           <p className="mb-8 text-sm text-muted-foreground">
-            {t.online.anonymousNotice}
+            {t.online.lobbySubtitle}
           </p>
 
           {!configured ? (

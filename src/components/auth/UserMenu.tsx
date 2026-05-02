@@ -57,8 +57,18 @@ export function UserMenu() {
     );
   }
 
-  // Залогинен — выпадающее меню
-  const name = profile?.display_name || user.email?.split("@")[0] || t.common.guest;
+  // Залогинен — выпадающее меню. Имя берём в порядке приоритета:
+  // 1) profile.display_name из БД (если уже подгружено)
+  // 2) user.user_metadata.display_name (доступно сразу из auth — НЕТ flash начала email)
+  // 3) часть email до @
+  // 4) Guest
+  const userMetaName = (user.user_metadata as { display_name?: string } | null)
+    ?.display_name;
+  const name =
+    profile?.display_name ||
+    userMetaName ||
+    user.email?.split("@")[0] ||
+    t.common.guest;
   const initial = name.slice(0, 1).toUpperCase();
 
   const handleSignOut = async () => {
@@ -85,7 +95,9 @@ export function UserMenu() {
         >
           {initial}
         </span>
-        <span className="hidden sm:inline">{name}</span>
+        <span className="hidden sm:inline-block max-w-[8rem] truncate">
+          {name}
+        </span>
       </button>
       {open && (
         <div
