@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { LogIn, LogOut, User as UserIcon, UserPlus } from "lucide-react";
+import { LogIn, LogOut, User as UserIcon, UserPlus, Settings } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/hooks/use-profile";
@@ -36,12 +36,12 @@ export function UserMenu() {
   if (!configured) return null;
 
   if (loading) {
-    // Skeleton ровно такого же размера как logged-in кнопка —
-    // соседние элементы Header не двигаются при появлении.
+    // Skeleton соответствует МИНИМАЛЬНОЙ ширине кнопки (короткое имя).
+    // Если имя длиннее — кнопка после загрузки немного раздвинется вправо.
     return (
       <div
         aria-hidden="true"
-        className="h-9 w-9 sm:w-[8rem] rounded-md border bg-card/40 animate-pulse"
+        className="h-9 w-9 sm:w-[7rem] rounded-md border bg-card/40 animate-pulse"
       />
     );
   }
@@ -95,7 +95,7 @@ export function UserMenu() {
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "inline-flex h-9 w-9 sm:w-[8rem] items-center gap-2 rounded-md border bg-card px-2.5 text-sm hover:bg-secondary justify-center sm:justify-start",
+          "inline-flex h-9 w-9 sm:w-auto sm:min-w-[7rem] sm:max-w-[12rem] items-center gap-2 rounded-md border bg-card px-2.5 text-sm hover:bg-secondary justify-center sm:justify-start",
         )}
       >
         <span
@@ -104,7 +104,7 @@ export function UserMenu() {
         >
           {initial}
         </span>
-        <span className="hidden sm:block flex-1 truncate text-left">
+        <span className="hidden sm:block min-w-0 flex-1 truncate text-left">
           {name}
         </span>
       </button>
@@ -116,6 +116,15 @@ export function UserMenu() {
           <div className="border-b px-3 py-2 text-xs text-muted-foreground">
             {user.email}
           </div>
+          <Link
+            href="/settings/profile"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-secondary"
+          >
+            <Settings className="h-3.5 w-3.5" aria-hidden="true" />
+            {t.common.profile}
+          </Link>
           <Link
             href="/games"
             role="menuitem"
@@ -169,13 +178,26 @@ export function MobileAuthLinks() {
     );
   }
 
-  const name = profile?.display_name || user.email?.split("@")[0] || t.common.guest;
+  const userMetaName = (user.user_metadata as { display_name?: string } | null)
+    ?.display_name;
+  const name =
+    profile?.display_name ||
+    userMetaName ||
+    user.email?.split("@")[0] ||
+    t.common.guest;
   return (
     <>
       <div className="border-b px-4 py-2 text-xs text-muted-foreground">
         {name}
         {user.email && <div className="text-[10px]">{user.email}</div>}
       </div>
+      <Link
+        href="/settings/profile"
+        className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-secondary"
+      >
+        <Settings className="h-3.5 w-3.5" aria-hidden="true" />
+        {t.common.profile}
+      </Link>
       <button
         type="button"
         onClick={async () => {

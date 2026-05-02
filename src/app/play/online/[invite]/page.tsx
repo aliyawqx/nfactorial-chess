@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo, useState, useCallback } from "react";
+import { use, useEffect, useMemo, useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Chess, type Square } from "chess.js";
 import { Copy, Check, Loader2, Users, Flag, Handshake } from "lucide-react";
@@ -117,6 +117,36 @@ export default function OnlineGamePage({ params }: PageProps) {
   };
 
   const gameOver = localGameOver ?? detectGameOver(chessState);
+
+  // Финализация партии — только хост вызывает API,
+  // чтобы не было двойной обработки. UseRef защищает от повторного вызова.
+  const finalizedRef = useRef(false);
+  useEffect(() => {
+    if (
+      !gameOver ||
+      !room ||
+      finalizedRef.current ||
+      room.status === "finished" ||
+      gameOver.result === "*"
+    ) {
+      return;
+    }
+    const isHost = user?.id === room.host_id;
+    if (!isHost) return;
+    finalizedRef.current = true;
+    fetch("/api/games/finalize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        roomId: room.id,
+        result: gameOver.result,
+        termination: gameOver.termination,
+      }),
+    }).catch((e) => {
+      console.error("finalize failed:", e);
+      finalizedRef.current = false; // позволим ретраи при следующем render
+    });
+  }, [gameOver, room, user?.id]);
 
   const handleMove = useCallback(
     (params: { from: Square; to: Square; promotion?: "q" | "r" | "b" | "n" }) => {

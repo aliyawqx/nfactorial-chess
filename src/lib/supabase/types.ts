@@ -168,7 +168,12 @@ export interface Database {
         Relationships: [];
       };
     };
-    Functions: { [_ in never]: never };
+    Functions: {
+      refresh_leaderboard: {
+        Args: Record<string, never>;
+        Returns: void;
+      };
+    };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
   };
