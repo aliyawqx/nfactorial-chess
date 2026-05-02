@@ -70,7 +70,6 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <UserMenu />
           <LanguageToggle />
           <ThemeToggle />
           {/* Mobile burger */}
@@ -116,6 +115,9 @@ export function AppHeader() {
               </nav>
             )}
           </div>
+          {/* UserMenu в самом правом конце — рост происходит ВПРАВО,
+              соседи слева не двигаются. */}
+          <UserMenu />
         </div>
       </div>
     </header>

@@ -36,12 +36,12 @@ export function UserMenu() {
   if (!configured) return null;
 
   if (loading) {
-    // Skeleton того же размера что и финальная кнопка —
-    // резервируем место чтобы соседние кнопки не прыгали.
+    // Skeleton ровно такого же размера как logged-in кнопка —
+    // соседние элементы Header не двигаются при появлении.
     return (
       <div
         aria-hidden="true"
-        className="h-9 w-9 sm:w-[7.5rem] rounded-md border bg-card/40 animate-pulse"
+        className="h-9 w-9 sm:w-[8rem] rounded-md border bg-card/40 animate-pulse"
       />
     );
   }
@@ -95,16 +95,16 @@ export function UserMenu() {
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "inline-flex h-9 items-center gap-2 rounded-md border bg-card px-2.5 text-sm hover:bg-secondary",
+          "inline-flex h-9 w-9 sm:w-[8rem] items-center gap-2 rounded-md border bg-card px-2.5 text-sm hover:bg-secondary justify-center sm:justify-start",
         )}
       >
         <span
           aria-hidden="true"
-          className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
+          className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
         >
           {initial}
         </span>
-        <span className="hidden sm:inline-block max-w-[8rem] truncate">
+        <span className="hidden sm:block flex-1 truncate text-left">
           {name}
         </span>
       </button>
