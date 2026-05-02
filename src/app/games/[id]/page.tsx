@@ -8,6 +8,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Copy
 import { AppHeader } from "@/components/layout/AppHeader";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { getGame, type SavedGame } from "@/lib/games-storage";
+import { getOnlineGame } from "@/lib/games-online";
 import { Button } from "@/components/ui/Button";
 
 const ChessBoard = dynamic(
@@ -32,7 +33,26 @@ export default function GameDetailPage({ params }: PageProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    setGame(getGame(id));
+    let cancelled = false;
+    async function load() {
+      const local = getGame(id);
+      if (local) {
+        if (!cancelled) setGame(local);
+        return;
+      }
+      // UUID-формат → пробуем онлайн-источник
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (isUuid) {
+        const online = await getOnlineGame(id);
+        if (!cancelled) setGame(online);
+      } else {
+        if (!cancelled) setGame(null);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const positions = useMemo(() => {

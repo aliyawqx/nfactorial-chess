@@ -9,6 +9,10 @@ import {
   Users,
   Sparkles,
   ArrowRight,
+  Keyboard,
+  Volume2,
+  Contrast,
+  ZapOff,
 } from "lucide-react";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { buttonVariants } from "@/components/ui/Button";
@@ -96,6 +100,38 @@ export default function Home() {
                   </div>
                   <h3 className="mb-2 font-semibold">{title}</h3>
                   <p className="text-sm text-muted-foreground">{description}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className="border-b py-16 sm:py-20" aria-labelledby="a11y-heading">
+          <div className="container mx-auto max-w-6xl px-4">
+            <h2
+              id="a11y-heading"
+              className="mb-3 text-center text-3xl font-semibold tracking-tight sm:text-4xl"
+            >
+              {t.a11yPage.heroTitle}
+            </h2>
+            <p className="mb-12 text-center text-balance text-muted-foreground">
+              {t.a11yPage.heroDescription}
+            </p>
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { icon: Mic, title: t.a11yPage.voiceTitle, desc: t.a11yPage.voiceDesc },
+                { icon: Keyboard, title: t.a11yPage.keyboardTitle, desc: t.a11yPage.keyboardDesc },
+                { icon: Eye, title: t.a11yPage.srTitle, desc: t.a11yPage.srDesc },
+                { icon: Volume2, title: t.a11yPage.ttsTitle, desc: t.a11yPage.ttsDesc },
+                { icon: Contrast, title: t.a11yPage.contrastTitle, desc: t.a11yPage.contrastDesc },
+                { icon: ZapOff, title: t.a11yPage.motionTitle, desc: t.a11yPage.motionDesc },
+              ].map(({ icon: Icon, title, desc }) => (
+                <li key={title} className="rounded-lg border bg-card p-5">
+                  <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-md bg-secondary">
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                  <h3 className="mb-1 font-semibold">{title}</h3>
+                  <p className="text-sm text-muted-foreground">{desc}</p>
                 </li>
               ))}
             </ul>

@@ -20,7 +20,6 @@ export function AppHeader() {
     { href: "/play/online", label: t.common.online },
     { href: "/leaderboard", label: t.common.leaderboard },
     { href: "/games", label: t.common.games },
-    { href: "/accessibility", label: t.common.accessibility },
   ];
 
   // Закрытие при клике вне меню или Esc
