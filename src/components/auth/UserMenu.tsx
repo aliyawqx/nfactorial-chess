@@ -33,8 +33,17 @@ export function UserMenu() {
     };
   }, [open]);
 
-  if (!configured || loading) {
-    return null;
+  if (!configured) return null;
+
+  if (loading) {
+    // Skeleton того же размера что и финальная кнопка —
+    // резервируем место чтобы соседние кнопки не прыгали.
+    return (
+      <div
+        aria-hidden="true"
+        className="h-9 w-9 sm:w-[7.5rem] rounded-md border bg-card/40 animate-pulse"
+      />
+    );
   }
 
   // Не залогинен (или анонимный без email) → показать кнопки Войти/Регистрация
