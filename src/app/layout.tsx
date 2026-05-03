@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { SkipLink } from "@/components/a11y/SkipLink";
 import { LiveRegionProvider } from "@/components/a11y/LiveRegion";
+import { ProfileProvider } from "@/lib/profile/ProfileProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -50,10 +51,12 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <I18nProvider>
-            <LiveRegionProvider>
-              <SkipLink />
-              {children}
-            </LiveRegionProvider>
+            <ProfileProvider>
+              <LiveRegionProvider>
+                <SkipLink />
+                {children}
+              </LiveRegionProvider>
+            </ProfileProvider>
           </I18nProvider>
         </ThemeProvider>
       </body>

@@ -19,7 +19,6 @@ export function AppHeader() {
     { href: "/play/ai", label: t.common.vsAi },
     { href: "/play/online", label: t.common.online },
     { href: "/leaderboard", label: t.common.leaderboard },
-    { href: "/games", label: t.common.games },
     { href: "/shop", label: t.common.shop },
   ];
 

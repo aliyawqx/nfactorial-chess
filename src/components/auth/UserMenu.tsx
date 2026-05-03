@@ -211,6 +211,13 @@ export function MobileAuthLinks() {
         <Settings className="h-3.5 w-3.5" aria-hidden="true" />
         {t.common.profile}
       </Link>
+      <Link
+        href="/games"
+        className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-secondary"
+      >
+        <UserIcon className="h-3.5 w-3.5" aria-hidden="true" />
+        {t.common.games}
+      </Link>
       <button
         type="button"
         onClick={async () => {

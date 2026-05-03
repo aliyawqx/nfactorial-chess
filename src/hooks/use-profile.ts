@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getSupabaseClient } from "@/lib/supabase/client";
-import { useSupabaseUser } from "./use-supabase-user";
+import { useProfileContext } from "@/lib/profile/ProfileProvider";
 import type { Database } from "@/lib/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -13,35 +11,18 @@ export interface UseProfileReturn {
   refresh: () => void;
 }
 
+/**
+ * Обёртка над глобальным ProfileContext. Все компоненты, которые используют
+ * `useProfile()`, теперь читают из одного источника + localStorage cache,
+ * без отдельных запросов в Supabase.
+ */
 export function useProfile(): UseProfileReturn {
-  const { user, configured } = useSupabaseUser();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [tick, setTick] = useState(0);
-
-  useEffect(() => {
-    if (!configured || !user) {
-      setProfile(null);
-      setLoading(false);
-      return;
-    }
-    const supabase = getSupabaseClient();
-    let cancelled = false;
-    setLoading(true);
-    supabase
-      .from("profiles")
-      .select()
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (cancelled) return;
-        setProfile(data ?? null);
-        setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [user, configured, tick]);
-
-  return { profile, loading, refresh: () => setTick((n) => n + 1) };
+  const { profile, loading, refresh } = useProfileContext();
+  return {
+    profile,
+    loading,
+    refresh: () => {
+      void refresh();
+    },
+  };
 }

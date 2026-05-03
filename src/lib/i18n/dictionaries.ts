@@ -43,7 +43,7 @@ export const dictionaries = {
       readyTitle: "Готов сыграть?",
       readyDescription: "Начни с локальной партии вдвоём — без регистрации.",
       ctaPlayLocal: "Играть локально",
-      footerLeft: "© 2026 VoiceChess — проект для nFactorial School.",
+      footerLeft: "© 2026 VoiceChess.",
       footerRight: "Сделано с заботой о доступности.",
     },
     features: {
@@ -350,7 +350,7 @@ export const dictionaries = {
       readyTitle: "Ready to play?",
       readyDescription: "Start with a local match for two — no signup required.",
       ctaPlayLocal: "Play locally",
-      footerLeft: "© 2026 VoiceChess — built for nFactorial School.",
+      footerLeft: "© 2026 VoiceChess.",
       footerRight: "Made with care for accessibility.",
     },
     features: {
@@ -657,7 +657,7 @@ export const dictionaries = {
       readyTitle: "Ойнауға дайынсыз ба?",
       readyDescription: "Жергілікті ойыннан баста — тіркеусіз.",
       ctaPlayLocal: "Жергілікті ойнау",
-      footerLeft: "© 2026 VoiceChess — nFactorial School үшін жасалған.",
+      footerLeft: "© 2026 VoiceChess.",
       footerRight: "Қолжетімділікке мән берілген жоба.",
     },
     features: {
