@@ -44,7 +44,6 @@ export default function ProfileSettingsPage() {
 
   const isPro = profile?.is_pro === true;
 
-  // Подгружаем текущие значения когда profile приходит
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name ?? "");
@@ -66,7 +65,6 @@ export default function ProfileSettingsPage() {
     const trimmedName = displayName.trim() || null;
     const trimmedCity = city.trim() || null;
 
-    // Скин может выбираться только Pro; не-Pro принудительно cburnett
     const finalSkin = isPro ? activeSkin : "cburnett";
 
     const { error: dbErr } = await supabase
@@ -87,22 +85,19 @@ export default function ProfileSettingsPage() {
       return;
     }
 
-    // Синхронизируем display_name с auth.user.user_metadata,
-    // чтобы Header видел свежее имя без перезагрузки.
+    // sync display_name в auth.user_metadata — header видит без reload
     if (trimmedName) {
       await supabase.auth.updateUser({
         data: { display_name: trimmedName },
       });
     }
 
-    // Освежаем materialized view leaderboard чтобы новый город/имя
-    // подхватились в /leaderboard без задержки. Best-effort.
+    // best-effort
     void supabase.rpc("refresh_leaderboard").then(
       () => null,
       () => null,
     );
 
-    // Применяем смену UI-локали
     setLocale(language);
 
     refresh();

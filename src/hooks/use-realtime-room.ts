@@ -86,7 +86,7 @@ export function useRealtimeRoom(roomId: string | null): UseRealtimeRoomReturn {
           if (cancelled) return;
           const newMove = payload.new as RoomMove;
           setMoves((prev) => {
-            // Идемпотентность: если уже есть ход с этим ply — не дублируем
+            // idempotent по ply
             if (prev.some((m) => m.ply === newMove.ply)) return prev;
             return [...prev, newMove].sort((a, b) => a.ply - b.ply);
           });

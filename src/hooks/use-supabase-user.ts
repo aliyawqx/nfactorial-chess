@@ -11,11 +11,6 @@ export interface UseSupabaseUserReturn {
   ensureSignedIn: () => Promise<User | null>;
 }
 
-/**
- * Hook для авторизации:
- *  - читает текущего пользователя
- *  - предоставляет ensureSignedIn() — анонимный вход если нет сессии
- */
 export function useSupabaseUser(): UseSupabaseUserReturn {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);

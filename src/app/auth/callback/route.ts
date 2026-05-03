@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
-// OAuth и email confirmation callback.
-// Supabase редиректит сюда с ?code=... после подтверждения; мы обмениваем
-// code на session и редиректим на ?next= (или на главную).
-
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");

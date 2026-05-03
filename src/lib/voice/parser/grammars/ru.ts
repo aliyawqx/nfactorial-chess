@@ -2,7 +2,6 @@ import type { Square } from "chess.js";
 import type { PieceType } from "@/types/chess";
 import type { ParsedVoiceInput } from "../types";
 
-// Карта русских названий фигур (включая разные падежи и сокращения)
 const PIECE_MAP: Record<string, PieceType> = {
   пешка: "p",
   пешку: "p",

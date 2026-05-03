@@ -1,6 +1,3 @@
-// Нормализация распознанного текста: убираем пунктуацию, склейку чисел/букв,
-// заменяем словесные представления цифр и букв.
-
 const FILE_WORDS_EN: Record<string, string> = {
   alpha: "a",
   bravo: "b",
@@ -13,7 +10,6 @@ const FILE_WORDS_EN: Record<string, string> = {
 };
 
 const FILE_WORDS_RU: Record<string, string> = {
-  // фонетические алиасы букв
   "а": "a",
   "бэ": "b",
   "бе": "b",
@@ -79,9 +75,7 @@ const NUMBER_WORDS_KK: Record<string, string> = {
 };
 
 function replaceWordMap(input: string, dict: Record<string, string>): string {
-  // Используем разбиение по пробелам и пунктуации — \b в JS не работает с кириллицей
-  // (кириллические буквы — non-word char без unicode flag, и \b ведёт себя неинтуитивно).
-  // Также сохраняем уже нормализованные клетки вида f3 (latin+digit) — их не трогаем.
+  // \b не работает с кириллицей — поэтому split-by-whitespace
   return input
     .split(/(\s+|[-,])/)
     .map((token) => {
@@ -94,10 +88,8 @@ function replaceWordMap(input: string, dict: Record<string, string>): string {
 export function normalize(input: string, locale: "ru" | "en" | "kk"): string {
   let s = input.toLowerCase().trim();
 
-  // Уберём пунктуацию кроме дефисов и плюсов
   s = s.replace(/[.,!?:;'"«»()]/g, " ");
 
-  // Замена слов-чисел на цифры
   if (locale === "en") {
     s = replaceWordMap(s, NUMBER_WORDS_EN);
     s = replaceWordMap(s, FILE_WORDS_EN);
@@ -110,8 +102,7 @@ export function normalize(input: string, locale: "ru" | "en" | "kk"): string {
     s = replaceWordMap(s, NUMBER_WORDS_RU);
   }
 
-  // Склейки кириллической буквы-файла с цифрой: "е4" (кир) → "e4" (lat)
-  // Отдельно — потому что split-by-whitespace не видит границы внутри слитого токена.
+  // склейки кириллической буквы-файла с цифрой: "е4" (кир) → "e4" (lat)
   const cyrToLat: Record<string, string> = {
     "а": "a",
     "е": "e",
@@ -123,16 +114,14 @@ export function normalize(input: string, locale: "ru" | "en" | "kk"): string {
       cyrToLat[letter.toLowerCase()] ? cyrToLat[letter.toLowerCase()] + num : m,
   );
 
-  // "эф 3" → "f3" (склеить букву + цифру через пробел)
   s = s.replace(/([a-h])\s+([1-8])/gi, "$1$2");
 
-  // "f3-ке", "e4-ге", "a1-да" → "f3", "e4", "a1" (казахские падежи)
+  // казахские падежи: "f3-ке", "e4-ге", "a1-да" → "f3"
   s = s.replace(
     /([a-h][1-8])-(?:ке|ге|да|де|нан|нен|тан|тен)/gi,
     "$1",
   );
 
-  // Множественные пробелы
   s = s.replace(/\s+/g, " ").trim();
 
   return s;

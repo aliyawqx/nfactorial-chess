@@ -1,24 +1,12 @@
-// Классический Elo-рейтинг.
-// K-factor 32 — стандарт для любительского уровня (FIDE для < 2400 использует 20-40).
-// Стартовый рейтинг 1200.
-
 const DEFAULT_K = 32;
 export const DEFAULT_ELO = 1200;
 
 export type GameOutcome = "win" | "loss" | "draw";
 
-/**
- * Ожидаемый результат для игрока А против игрока Б.
- * Возвращает число от 0 до 1.
- */
 export function expectedScore(playerElo: number, opponentElo: number): number {
   return 1 / (1 + Math.pow(10, (opponentElo - playerElo) / 400));
 }
 
-/**
- * Изменение рейтинга игрока после партии.
- * outcome: результат с точки зрения этого игрока ("win"/"draw"/"loss").
- */
 export function calcEloDelta(
   playerElo: number,
   opponentElo: number,
@@ -30,10 +18,6 @@ export function calcEloDelta(
   return Math.round(k * (actual - expected));
 }
 
-/**
- * Применить изменение к обоим игрокам.
- * `result` в шахматной нотации с точки зрения белых.
- */
 export function applyGameResult(params: {
   whiteElo: number;
   blackElo: number;

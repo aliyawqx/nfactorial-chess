@@ -11,11 +11,6 @@ export interface UseProfileReturn {
   refresh: () => void;
 }
 
-/**
- * Обёртка над глобальным ProfileContext. Все компоненты, которые используют
- * `useProfile()`, теперь читают из одного источника + localStorage cache,
- * без отдельных запросов в Supabase.
- */
 export function useProfile(): UseProfileReturn {
   const { profile, loading, refresh } = useProfileContext();
   return {

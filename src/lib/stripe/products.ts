@@ -1,5 +1,3 @@
-// Каталог продуктов VoiceChess.
-
 export interface Product {
   id: string;
   name: string;

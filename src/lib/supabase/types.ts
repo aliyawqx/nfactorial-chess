@@ -1,6 +1,3 @@
-// Минимальные типы БД для Phase 5 (мультиплеер).
-// Полные типы можно сгенерировать через `supabase gen types typescript --project-id <id> > src/lib/supabase/types.ts`.
-
 export type Json =
   | string
   | number

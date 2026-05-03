@@ -6,18 +6,6 @@ import { PRODUCTS } from "@/lib/stripe/products";
 
 export const runtime = "nodejs";
 
-/**
- * Stripe webhook handler.
- *
- * Локальная разработка:
- *   stripe listen --forward-to localhost:3000/api/stripe/webhook
- *
- * Production:
- *   Stripe Dashboard → Developers → Webhooks → Add endpoint:
- *     URL: https://<your-vercel-app>.vercel.app/api/stripe/webhook
- *     Events: checkout.session.completed
- *   Скопировать Signing secret в STRIPE_WEBHOOK_SECRET.
- */
 export async function POST(request: Request) {
   if (!isStripeConfigured()) {
     return NextResponse.json({ error: "not configured" }, { status: 503 });
@@ -50,7 +38,7 @@ export async function POST(request: Request) {
 
   const supabase = getSupabaseService();
 
-  // Идемпотентность: пропускаем уже обработанные события
+  // idempotent: skip уже обработанные события
   const { data: existing } = await supabase
     .from("stripe_events")
     .select("id")
@@ -60,8 +48,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, deduplicated: true });
   }
 
-  // Записываем событие до обработки чтобы повторы webhook от Stripe
-  // не запускали логику повторно.
+  // пишем событие до обработки — повтор от stripe не запустит логику дважды
   await supabase.from("stripe_events").insert({
     id: event.id,
     type: event.type,
@@ -92,7 +79,6 @@ export async function POST(request: Request) {
         ? session.payment_intent
         : (session.payment_intent?.id ?? null);
 
-    // Pro статус
     const { error: updErr } = await supabase
       .from("profiles")
       .update({
@@ -110,7 +96,7 @@ export async function POST(request: Request) {
     }
     console.log(`[stripe-webhook] profiles.is_pro=true for user ${userId}`);
 
-    // Журнал покупки (best-effort)
+    // best-effort
     const { error: insErr } = await supabase.from("purchases").insert({
       user_id: userId,
       product_id: productId,

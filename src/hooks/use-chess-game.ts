@@ -65,8 +65,7 @@ export function useChessGame(
   const chessRef = useRef<Chess>(new Chess(options.initialFen));
   const [, force] = useState(0);
   const rerender = useCallback(() => force((n) => n + 1), []);
-  // Результат партии "извне правил доски": resignation / draw agreement.
-  // chess.js не знает про эти исходы — храним их отдельным state.
+  // chess.js не знает про resignation/draw agreement — отдельный state
   const [manualGameOver, setManualGameOver] = useState<GameOver | null>(null);
   const onMoveRef = useRef(options.onMove);
   const onGameOverRef = useRef(options.onGameOver);
@@ -88,9 +87,7 @@ export function useChessGame(
         chessRef.current = restored;
         force((n) => n + 1);
       }
-    } catch {
-      /* ignore corrupted save */
-    }
+    } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -99,9 +96,7 @@ export function useChessGame(
     if (!key || typeof window === "undefined") return;
     try {
       window.localStorage.setItem(key, chessRef.current.pgn());
-    } catch {
-      /* quota exceeded — silent */
-    }
+    } catch {}
   }, []);
 
   const legalMoves = useMemo(() => chess.moves({ verbose: true }), [chess.fen()]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -122,7 +117,6 @@ export function useChessGame(
 
   const makeMove: UseChessGameReturn["makeMove"] = useCallback(
     ({ from, to, promotion }) => {
-      // Если партия уже завершена сдачей/ничьей — больше нельзя ходить
       if (manualGameOver) return null;
       try {
         const move = chessRef.current.move({
@@ -159,9 +153,7 @@ export function useChessGame(
       if (key && typeof window !== "undefined") {
         try {
           window.localStorage.removeItem(key);
-        } catch {
-          /* ignore */
-        }
+        } catch {}
       }
     },
     [rerender],

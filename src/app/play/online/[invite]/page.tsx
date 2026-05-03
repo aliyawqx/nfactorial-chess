@@ -44,7 +44,6 @@ export default function OnlineGamePage({ params }: PageProps) {
   const [guestInfo, setGuestInfo] = useState<PlayerInfo | null>(null);
   const [playersLoading, setPlayersLoading] = useState(true);
 
-  // Авто-вход + auto-join по invite_code при mount
   useEffect(() => {
     if (!configured) return;
     let cancelled = false;
@@ -65,8 +64,6 @@ export default function OnlineGamePage({ params }: PageProps) {
 
   const { room, moves, loading } = useRealtimeRoom(roomId);
 
-  // Подгружаем display_name + elo + город + ранг для обоих игроков комнаты.
-  // Перезагружаем когда меняется guest_id (гость присоединился) или host_id.
   useEffect(() => {
     if (!room || !configured) return;
     let cancelled = false;
@@ -95,7 +92,6 @@ export default function OnlineGamePage({ params }: PageProps) {
         }]),
       );
 
-      // Получаем ранг каждого игрока через count(*) с большим ELO
       const buildInfo = async (id: string | null): Promise<PlayerInfo | null> => {
         if (!id) return null;
         const p = profMap.get(id);
@@ -113,8 +109,7 @@ export default function OnlineGamePage({ params }: PageProps) {
           .select("id", { count: "exact", head: true })
           .gt("elo", p.elo)
           .gt("games_played", 0);
-        // Если у игрока ещё нет finished games — он не в leaderboard view
-        // (там фильтр games_played > 0). Проверим: в этом случае rank = null.
+        // нет finished games — нет в leaderboard view (фильтр games_played > 0)
         const { data: meInLb } = await supabase
           .from("leaderboard")
           .select("id")
@@ -148,7 +143,6 @@ export default function OnlineGamePage({ params }: PageProps) {
     };
   }, [room, configured]);
 
-  // Восстанавливаем chess.js из room_moves
   const chessState = useMemo(() => {
     const c = new Chess();
     for (const m of moves) {
@@ -165,7 +159,6 @@ export default function OnlineGamePage({ params }: PageProps) {
     return c;
   }, [moves]);
 
-  // Вычисляем мою роль и цвет
   const myColor: "w" | "b" | null = useMemo(() => {
     if (!room || !user) return null;
     if (room.host_id === user.id) {
@@ -206,8 +199,7 @@ export default function OnlineGamePage({ params }: PageProps) {
 
   const gameOver = localGameOver ?? detectGameOver(chessState);
 
-  // Финализация партии — только хост вызывает API,
-  // чтобы не было двойной обработки. UseRef защищает от повторного вызова.
+  // только хост финализирует — иначе двойная обработка
   const finalizedRef = useRef(false);
   useEffect(() => {
     if (
@@ -232,7 +224,7 @@ export default function OnlineGamePage({ params }: PageProps) {
       }),
     }).catch((e) => {
       console.error("finalize failed:", e);
-      finalizedRef.current = false; // позволим ретраи при следующем render
+      finalizedRef.current = false;
     });
   }, [gameOver, room, user?.id]);
 
@@ -242,7 +234,6 @@ export default function OnlineGamePage({ params }: PageProps) {
       if (!isMyTurn) return null;
       if (gameOver) return null;
 
-      // Локально валидируем
       const tester = new Chess(fen);
       let move;
       try {
@@ -262,7 +253,7 @@ export default function OnlineGamePage({ params }: PageProps) {
       const san = move.san;
       const fenAfter = tester.fen();
 
-      // Отправляем на сервер. Не дожидаемся ответа — Realtime подтянет.
+      // не ждём ответа — realtime подтянет
       appendMove({
         roomId,
         ply,
@@ -298,7 +289,6 @@ export default function OnlineGamePage({ params }: PageProps) {
         }
       : null;
 
-  // Озвучиваем все ходы (и свои, и оппонента)
   const lastPlayedMove =
     history.length > 0
       ? {
@@ -312,9 +302,7 @@ export default function OnlineGamePage({ params }: PageProps) {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* clipboard blocked */
-    }
+    } catch {}
   };
 
   const handleResign = () => {
@@ -431,7 +419,6 @@ export default function OnlineGamePage({ params }: PageProps) {
 
           <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:gap-6">
             <div className="space-y-3 sm:space-y-4">
-              {/* Opponent сверху доски (как в chess.com) */}
               <PlayerCard
                 player={user?.id === room.host_id ? guestInfo : hostInfo}
                 color={
@@ -459,7 +446,6 @@ export default function OnlineGamePage({ params }: PageProps) {
                 orientation={orientation}
                 interactive={!gameOver && isMyTurn && !isWaiting}
               />
-              {/* Я — снизу доски */}
               <PlayerCard
                 player={user?.id === room.host_id ? hostInfo : guestInfo}
                 color={myColor === "b" ? "black" : "white"}

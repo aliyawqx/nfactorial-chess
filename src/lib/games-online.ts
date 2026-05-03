@@ -3,11 +3,6 @@
 import { getSupabaseClient } from "@/lib/supabase/client";
 import type { SavedGame } from "./games-storage";
 
-/**
- * Загрузка онлайн-партий из Supabase для текущего пользователя.
- * Возвращает партии в едином формате SavedGame чтобы /games страница
- * могла объединить их с локальными.
- */
 export async function loadOnlineGames(userId: string): Promise<SavedGame[]> {
   const supabase = getSupabaseClient();
 

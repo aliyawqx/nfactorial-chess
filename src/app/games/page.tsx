@@ -48,8 +48,7 @@ export default function GamesPage() {
         online = onlineRaw.map((g) => ({ ...g, source: "online" }));
       }
 
-      // Дедупликация: если онлайн-партия уже есть в localStorage (по pgn)
-      // — отдаём приоритет онлайн. Простая защита от дублей.
+      // дедуп по pgn — приоритет online
       const seenPgn = new Set(online.map((g) => g.pgn));
       const merged = [
         ...online,

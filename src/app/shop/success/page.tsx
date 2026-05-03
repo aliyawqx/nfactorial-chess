@@ -16,7 +16,7 @@ function SuccessContent() {
   const { refresh } = useProfile();
 
   useEffect(() => {
-    // Перезагружаем профиль чтобы is_pro подхватился (webhook мог только что отработать)
+    // ждём webhook чтобы подхватить is_pro
     const t1 = setTimeout(() => refresh(), 500);
     const t2 = setTimeout(() => refresh(), 2500);
     return () => {

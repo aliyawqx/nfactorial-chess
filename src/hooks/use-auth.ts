@@ -62,10 +62,7 @@ export function useAuth(): UseAuthReturn {
       const origin =
         typeof window !== "undefined" ? window.location.origin : undefined;
 
-      // Если есть anonymous-сеанс — конвертируем через updateUser:
-      // user.id сохраняется → история (комнаты, партии, ходы) не теряется.
-      // Текст письма Supabase отправляет по шаблону "Change Email Address" —
-      // его нужно переписать в Dashboard → Authentication → Email Templates.
+      // конвертация anonymous: updateUser сохраняет user.id (история не теряется)
       if (currentUser?.is_anonymous) {
         const { error } = await supabase.auth.updateUser({
           email,
@@ -86,13 +83,11 @@ export function useAuth(): UseAuthReturn {
         return {
           user: updated.user,
           error: null,
-          // Если email confirmation в Supabase включена — пользователь
-          // остаётся anonymous пока не подтвердит email.
+          // с включённой email confirmation остаётся anonymous до подтверждения
           needsConfirmation: !updated.user || updated.user.is_anonymous,
         };
       }
 
-      // Обычная регистрация (без предыдущего anonymous-сеанса)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -125,9 +120,7 @@ export function useAuth(): UseAuthReturn {
       const supabase = getSupabaseClient();
       const origin =
         typeof window !== "undefined" ? window.location.origin : undefined;
-      // Пускаем recovery через /auth/callback чтобы код был обменян на session
-      // на сервере (PKCE flow). Иначе на /reset-password нет активной session
-      // и updateUser({password}) падает.
+      // pkce — обмен кода на session делает /auth/callback
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: origin
           ? `${origin}/auth/callback?next=/reset-password`

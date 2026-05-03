@@ -129,7 +129,7 @@ export function VoiceController({
     if (recognizerRef.current) recognizerRef.current.setLocale(locale);
   }, [locale]);
 
-  // Push-to-talk: Space (when not in input)
+  // push-to-talk: space
   useEffect(() => {
     if (!supported) return;
     const isTextInput = (target: EventTarget | null) => {
@@ -165,7 +165,6 @@ export function VoiceController({
     };
   }, [supported]);
 
-  // Озвучка хода соперника
   useEffect(() => {
     if (!ttsEnabled || !synthSupported || !speakOpponentMoves) return;
     if (!lastOpponentMove) return;

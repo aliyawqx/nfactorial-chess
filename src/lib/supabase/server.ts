@@ -21,8 +21,7 @@ export async function getSupabaseServer() {
             cookieStore.set(name, value, options),
           );
         } catch {
-          // ignore — `setAll` may be called from a Server Component
-          // where mutating cookies is forbidden. Refresh middleware handles it.
+          // setAll может прийти из server component — мутация cookies запрещена, middleware рефрешит
         }
       },
     },

@@ -46,9 +46,7 @@ function writeCache(userId: string, profile: Profile | null) {
     } else {
       window.localStorage.removeItem(CACHE_KEY_PREFIX + userId);
     }
-  } catch {
-    /* quota — ignore */
-  }
+  } catch {}
 }
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
@@ -78,13 +76,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-    // Сначала — мгновенно из cache (если есть)
+    // stale-while-revalidate
     const cached = readCache(user.id);
     if (cached) {
       setProfile(cached);
       setLoading(false);
     }
-    // Параллельно — fresh fetch чтобы обновить (stale-while-revalidate)
     fetchProfile(user.id);
   }, [user, configured, fetchProfile]);
 

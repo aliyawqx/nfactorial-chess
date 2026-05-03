@@ -22,7 +22,6 @@ export function AppHeader() {
     { href: "/shop", label: t.common.shop },
   ];
 
-  // Закрытие при клике вне меню или Esc
   useEffect(() => {
     if (!open) return;
     const onClickOutside = (e: MouseEvent) => {
@@ -115,8 +114,6 @@ export function AppHeader() {
               </nav>
             )}
           </div>
-          {/* UserMenu в самом правом конце — рост происходит ВПРАВО,
-              соседи слева не двигаются. */}
           <UserMenu />
         </div>
       </div>

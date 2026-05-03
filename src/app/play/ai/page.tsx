@@ -103,7 +103,6 @@ export default function AiGamePage() {
     onGameOver: handleGameOver,
   });
 
-  // Озвучиваем все ходы (и свои, и AI) — пользователь хочет каждый ход слышать
   const lastPlayedMove =
     history.length > 0
       ? {

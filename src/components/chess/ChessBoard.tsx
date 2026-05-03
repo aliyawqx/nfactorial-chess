@@ -65,7 +65,6 @@ export function ChessBoard({
     [onMove, announce, t.a11y],
   );
 
-  // Announce check / game over
   useEffect(() => {
     if (lastAnnouncedFenRef.current === position) return;
     lastAnnouncedFenRef.current = position;

@@ -36,8 +36,6 @@ export function UserMenu() {
   if (!configured) return null;
 
   if (loading) {
-    // Skeleton соответствует МИНИМАЛЬНОЙ ширине кнопки (короткое имя).
-    // Если имя длиннее — кнопка после загрузки немного раздвинется вправо.
     return (
       <div
         aria-hidden="true"
@@ -46,7 +44,6 @@ export function UserMenu() {
     );
   }
 
-  // Не залогинен (или анонимный без email) → показать кнопки Войти/Регистрация
   if (!user || isAnonymous) {
     return (
       <div className="hidden sm:flex items-center gap-1">
@@ -66,11 +63,7 @@ export function UserMenu() {
     );
   }
 
-  // Залогинен — выпадающее меню. Имя берём в порядке приоритета:
-  // 1) profile.display_name из БД (если уже подгружено)
-  // 2) user.user_metadata.display_name (доступно сразу из auth — НЕТ flash начала email)
-  // 3) часть email до @
-  // 4) Guest
+  // user_metadata.display_name доступно из auth сразу — без flash из email
   const userMetaName = (user.user_metadata as { display_name?: string } | null)
     ?.display_name;
   const name =

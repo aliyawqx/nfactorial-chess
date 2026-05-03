@@ -132,14 +132,13 @@ export function BoardA11yOverlay({
     moveFocus(`${String.fromCharCode(97 + nextFile)}${nextRank + 1}` as Square);
   };
 
-  // When a square becomes focused, announce its content
   useEffect(() => {
     if (!active) return;
     const el = containerRef.current?.querySelector<HTMLDivElement>(
       `[data-a11y-square="${focused}"]`,
     );
     if (el && document.activeElement === el) {
-      // Squares have aria-label; screen reader will read it on focus.
+      // aria-label прочитается ридером при focus
     }
   }, [focused, active]);
 

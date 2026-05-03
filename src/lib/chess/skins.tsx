@@ -52,10 +52,6 @@ const imgStyle: CSSProperties = {
   userSelect: "none",
 };
 
-/**
- * Объект-рендерер для react-chessboard. Передаётся в options.pieces.
- * Каждая фигура рисуется через <img src="/pieces/<skin>/<code>.svg" />.
- */
 export function pieceRenderObject(
   skin: SkinId,
 ): Record<PieceCode, () => ReactElement> {

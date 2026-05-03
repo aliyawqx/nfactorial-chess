@@ -38,7 +38,7 @@ export function disambiguate(
   if (matches.length === 0) return { status: "illegal" };
   if (matches.length === 1) return { status: "ok", move: matches[0] };
 
-  // Если все matches с одинаковой promotion, и пешечный ход — выбираем дамку по умолчанию
+  // promotion по умолчанию — ферзь
   const queenPromo = matches.find((m) => m.promotion === "q");
   if (queenPromo && matches.every((m) => m.from === queenPromo.from && m.to === queenPromo.to)) {
     return { status: "ok", move: queenPromo };
@@ -47,8 +47,7 @@ export function disambiguate(
   return { status: "ambiguous", candidates: matches };
 }
 
-// Fuzzy fallback: если парсер не понял `to`, ищем все клетки в transcript
-// и пробуем матч против легальных ходов.
+// fuzzy fallback по клеткам из transcript
 export function fuzzyMatchSquares(
   transcript: string,
   legalMoves: Move[],

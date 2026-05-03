@@ -23,7 +23,7 @@ export interface PlayerInfo {
   elo: number | null;
   country: string | null;
   city: string | null;
-  rank: number | null; // null = нет ранга (нет finished games)
+  rank: number | null;
   isPro?: boolean;
 }
 
@@ -77,7 +77,6 @@ export function PlayerCard({
       role="group"
       aria-label={isYou ? t.online.you : t.online.opponent}
     >
-      {/* Color indicator + avatar */}
       <div className="relative shrink-0">
         <div
           className={cn(
@@ -98,7 +97,6 @@ export function PlayerCard({
         />
       </div>
 
-      {/* Name + meta */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span className="truncate text-sm font-medium">{name}</span>
@@ -128,7 +126,6 @@ export function PlayerCard({
         </div>
       </div>
 
-      {/* Turn indicator (animated dot) */}
       {isCurrentTurn && (
         <div className="shrink-0">
           <span className="relative inline-flex h-2 w-2">

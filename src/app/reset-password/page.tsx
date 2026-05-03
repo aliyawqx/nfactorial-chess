@@ -33,9 +33,7 @@ export default function ResetPasswordPage() {
     const result = await updatePassword(password);
     if (result.error) {
       const msg = result.error.toLowerCase();
-      // Supabase: "New password should be different from the old password"
-      // или code "same_password" — отдельное сообщение чтобы не путать
-      // пользователя с "ссылка устарела".
+      // отдельное сообщение чтобы не путать с "ссылка устарела"
       const isSamePassword =
         msg.includes("different from the old") ||
         msg.includes("same_password") ||
@@ -44,13 +42,10 @@ export default function ResetPasswordPage() {
       setSubmitting(false);
       return;
     }
-    // После успешной смены пароля разлогиниваем чтобы юзер вошёл уже свежим.
     try {
       const supabase = getSupabaseClient();
       await supabase.auth.signOut();
-    } catch {
-      /* ignore */
-    }
+    } catch {}
     setDone(true);
     setSubmitting(false);
     setTimeout(() => router.push("/login"), 2000);
@@ -82,7 +77,6 @@ export default function ResetPasswordPage() {
     );
   }
 
-  // Нет активной session → ссылка устарела или прямой заход
   if (!user) {
     return (
       <>

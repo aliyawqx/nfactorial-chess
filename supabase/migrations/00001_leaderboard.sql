@@ -1,11 +1,3 @@
--- VoiceChess: leaderboard (Phase 7a)
---
--- Запуск: вставить в Supabase Dashboard → SQL Editor → Run.
-
--- Materialized view с рейтингом игроков по ELO + их статистикой.
--- Содержит только профили с display_name (анонимные «Гость» исключены)
--- и хотя бы одной законченной партией.
-
 drop materialized view if exists public.leaderboard;
 
 create materialized view public.leaderboard as
@@ -36,7 +28,6 @@ create unique index leaderboard_id_idx on public.leaderboard(id);
 create index leaderboard_elo_idx on public.leaderboard(elo desc);
 create index leaderboard_city_idx on public.leaderboard(country, city, elo desc);
 
--- Функция для обновления view (вызывается из приложения после finalize)
 create or replace function public.refresh_leaderboard()
 returns void
 language sql
@@ -47,6 +38,5 @@ $$;
 
 grant execute on function public.refresh_leaderboard() to anon, authenticated;
 
--- Public read access. Materialized views в Supabase не имеют RLS,
--- но мы открываем доступ через GRANT.
+-- materialized views без RLS — доступ через GRANT
 grant select on public.leaderboard to anon, authenticated;

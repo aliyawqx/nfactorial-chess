@@ -8,7 +8,7 @@ import type { Database } from "@/lib/supabase/types";
 type Room = Database["public"]["Tables"]["rooms"]["Row"];
 type RoomMove = Database["public"]["Tables"]["room_moves"]["Row"];
 
-// 8-символьный alphanumeric код для invite-ссылки (без 0/O/1/I чтобы не путаться)
+// 8 символов, без 0/O/1/I
 const generateInviteCode = customAlphabet(
   "23456789abcdefghjkmnpqrstuvwxyz",
   8,

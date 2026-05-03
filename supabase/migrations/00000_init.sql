@@ -1,10 +1,4 @@
--- VoiceChess: initial schema (Phase 5 — multiplayer + profiles)
---
--- Запуск: скопировать всё содержимое в Supabase Dashboard → SQL Editor → Run.
-
--- ============================================================================
--- 1. profiles (1:1 с auth.users)
--- ============================================================================
+-- profiles (1:1 с auth.users)
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -33,7 +27,7 @@ drop policy if exists "users insert own profile" on public.profiles;
 create policy "users insert own profile"
   on public.profiles for insert with check (auth.uid() = id);
 
--- Авто-создание profile row при регистрации (включая anonymous sign-in)
+-- авто-создание profile при регистрации (включая anonymous)
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -53,9 +47,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- ============================================================================
--- 2. rooms — мультиплеер-комнаты
--- ============================================================================
+-- rooms — мультиплеер-комнаты
 
 create table if not exists public.rooms (
   id uuid primary key default gen_random_uuid(),
@@ -83,8 +75,6 @@ alter table public.rooms enable row level security;
 drop policy if exists "rooms readable by invite or participant" on public.rooms;
 create policy "rooms readable by invite or participant"
   on public.rooms for select using (true);
-  -- Любой кто знает invite_code может прочитать комнату
-  -- (но не модифицировать). На уровне приложения мы ищем только по invite_code.
 
 drop policy if exists "host can create rooms" on public.rooms;
 create policy "host can create rooms"
@@ -96,9 +86,7 @@ create policy "participants can update rooms"
     auth.uid() = host_id or auth.uid() = guest_id or guest_id is null
   );
 
--- ============================================================================
--- 3. room_moves — server-authoritative очередь ходов
--- ============================================================================
+-- room_moves — server-authoritative очередь ходов
 
 create table if not exists public.room_moves (
   room_id uuid not null references public.rooms(id) on delete cascade,
@@ -131,7 +119,7 @@ create policy "participants append moves"
     )
   );
 
--- Trigger: при INSERT в room_moves обновлять rooms.current_fen и last_move_at
+-- INSERT в room_moves → обновить rooms.current_fen + last_move_at
 create or replace function public.on_room_move_insert()
 returns trigger
 language plpgsql
@@ -152,9 +140,7 @@ create trigger trg_room_moves_after_insert
   after insert on public.room_moves
   for each row execute function public.on_room_move_insert();
 
--- ============================================================================
--- 4. games — финализированные партии (история)
--- ============================================================================
+-- games — финализированные партии
 
 create table if not exists public.games (
   id uuid primary key default gen_random_uuid(),
@@ -187,7 +173,7 @@ create policy "games readable by participants or finished public"
     or auth.uid() = black_id
   );
 
--- Прямая запись в games запрещена с клиента — только через service-role в API routes.
+-- запись только через service-role
 drop policy if exists "no direct writes to games" on public.games;
 create policy "no direct writes to games"
   on public.games for insert with check (false);
@@ -196,10 +182,6 @@ drop policy if exists "no direct updates to games" on public.games;
 create policy "no direct updates to games"
   on public.games for update using (false);
 
--- ============================================================================
--- 5. Realtime publications
--- ============================================================================
-
--- Realtime для rooms и room_moves — клиенты подписываются на изменения.
+-- realtime publications
 alter publication supabase_realtime add table public.rooms;
 alter publication supabase_realtime add table public.room_moves;

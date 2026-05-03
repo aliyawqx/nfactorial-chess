@@ -11,16 +11,6 @@ interface FinalizeBody {
   termination?: string;
 }
 
-/**
- * Финализация онлайн-партии. Вызывается клиентом когда обнаружен game over.
- * Server-side через service-role:
- *   1) Идемпотентность: если room.status уже finished — early return.
- *   2) Собираем PGN из room_moves.
- *   3) INSERT в games с привязкой к room.
- *   4) Пересчёт ELO обоих игроков.
- *   5) UPDATE rooms.status = 'finished'.
- *   6) RPC refresh_leaderboard().
- */
 export async function POST(request: Request) {
   let body: FinalizeBody;
   try {
@@ -41,7 +31,7 @@ export async function POST(request: Request) {
 
   const supabase = getSupabaseService();
 
-  // 1) Idempotency
+  // idempotent: если room.status уже finished — early return
   const { data: room, error: roomErr } = await supabase
     .from("rooms")
     .select()
@@ -55,7 +45,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, alreadyFinished: true });
   }
 
-  // 2) Собираем PGN
   const { data: moves } = await supabase
     .from("room_moves")
     .select()
@@ -78,7 +67,6 @@ export async function POST(request: Request) {
   const finalFen = chess.fen();
   const plyCount = chess.history().length;
 
-  // 3) Подгружаем профили игроков (для имён + ELO)
   const playerIds = [room.host_id, room.guest_id].filter(
     (id): id is string => !!id,
   );
@@ -105,14 +93,12 @@ export async function POST(request: Request) {
   const whiteElo = whiteProfile?.elo ?? DEFAULT_ELO;
   const blackElo = blackProfile?.elo ?? DEFAULT_ELO;
 
-  // 4) Пересчёт ELO
   const eloChange = applyGameResult({
     whiteElo,
     blackElo,
     result: body.result,
   });
 
-  // 5) INSERT в games
   const { data: gameInserted, error: gameErr } = await supabase
     .from("games")
     .insert({
@@ -139,7 +125,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // 6) UPDATE profiles.elo (только для зарегистрированных, не для null id)
   if (whiteId) {
     await supabase
       .from("profiles")
@@ -153,13 +138,12 @@ export async function POST(request: Request) {
       .eq("id", blackId);
   }
 
-  // 7) UPDATE rooms.status = 'finished'
   await supabase
     .from("rooms")
     .update({ status: "finished" })
     .eq("id", body.roomId);
 
-  // 8) Refresh leaderboard view (best-effort, не блокируем при ошибке)
+  // best-effort
   await supabase.rpc("refresh_leaderboard").then(
     () => null,
     () => null,

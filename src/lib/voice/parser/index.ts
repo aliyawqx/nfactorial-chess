@@ -19,7 +19,7 @@ export function parseVoiceInput(text: string, locale: Locale): ParsedVoiceInput 
     case "ru":
       return parseRU(normalized);
     case "kk":
-      // Kazakh — пробуем kk-парсер, при неудаче падаем на ru (русский часто перемежается)
+      // казахский часто перемежается с русским — fallback на ru
       const kk = parseKK(normalized);
       if (kk.kind !== "unknown") return kk;
       return parseRU(normalized);
@@ -39,7 +39,6 @@ export function resolveVoiceMove(
   const parsed = parseVoiceInput(text, locale);
   let resolution = disambiguate(parsed, legalMoves);
 
-  // Если парсер не понял или ход illegal — пробуем fuzzy matching по клеткам в исходном тексте
   if (resolution.status === "illegal" || resolution.status === "no-move") {
     const fuzzy = fuzzyMatchSquares(normalize(text, locale), legalMoves);
     if (fuzzy) {

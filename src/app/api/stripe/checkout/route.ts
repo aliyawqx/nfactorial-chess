@@ -9,11 +9,6 @@ interface CheckoutBody {
   productId?: string;
 }
 
-/**
- * Создание Stripe Checkout Session.
- * Требует залогиненного пользователя — user.id попадает в metadata,
- * webhook потом по нему отметит is_pro = true.
- */
 export async function POST(request: Request) {
   if (!isStripeConfigured()) {
     return NextResponse.json(
@@ -25,9 +20,7 @@ export async function POST(request: Request) {
   let body: CheckoutBody = {};
   try {
     body = await request.json();
-  } catch {
-    /* empty body OK */
-  }
+  } catch {}
 
   const productId = body.productId ?? PRO_PRODUCT.id;
   const product = PRODUCTS[productId];

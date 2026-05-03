@@ -40,7 +40,6 @@ export default function GameDetailPage({ params }: PageProps) {
         if (!cancelled) setGame(local);
         return;
       }
-      // UUID-формат → пробуем онлайн-источник
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       if (isUuid) {
         const online = await getOnlineGame(id);

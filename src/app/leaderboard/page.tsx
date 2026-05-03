@@ -77,19 +77,13 @@ export default function LeaderboardPage() {
     };
   }, [configured, countryFilter, cityFilter]);
 
-  // Список стран для фильтра — берётся из текущей выборки
   const availableCountries = Array.from(
     new Set((rows ?? []).map((r) => r.country)),
   ).sort();
 
-  // Список городов для фильтра — только не-null, отсортированные
   const availableCities = Array.from(
     new Set((rows ?? []).map((r) => r.city).filter((c): c is string => !!c)),
   ).sort((a, b) => a.localeCompare(b, "ru"));
-
-  // Сброс city-фильтра при смене страны (если такого города нет в новой выборке)
-  // — отдельным эффектом не нужен: при смене country query перезапустится,
-  // и если cityFilter не подходит — таблица будет пустой, юзер увидит и сбросит.
 
   return (
     <>

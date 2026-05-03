@@ -7,7 +7,6 @@ export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // Если Supabase не настроен — пропускаем без обработки
   if (!url || !anon) return response;
 
   const supabase = createServerClient(url, anon, {
@@ -27,7 +26,7 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // Триггерит refresh access_token если нужно
+  // триггерит refresh access_token
   await supabase.auth.getUser();
 
   return response;

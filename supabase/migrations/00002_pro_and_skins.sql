@@ -1,31 +1,16 @@
--- VoiceChess: Pro tier + skins (Phase 7d)
---
--- Запуск: вставить в Supabase Dashboard → SQL Editor → Run.
-
--- ============================================================================
--- 1. Расширение profiles: Pro статус + активный скин
--- ============================================================================
-
 alter table public.profiles
   add column if not exists is_pro boolean not null default false,
   add column if not exists active_skin text not null default 'cburnett',
   add column if not exists pro_purchased_at timestamptz;
 
--- ============================================================================
--- 2. stripe_events — идемпотентность Stripe webhooks
--- ============================================================================
-
+-- stripe_events — идемпотентность webhooks
 create table if not exists public.stripe_events (
-  id text primary key, -- evt_...
+  id text primary key,
   type text not null,
   payload jsonb not null,
   processed_at timestamptz not null default now()
 );
--- Без RLS — таблица доступна только через service-role в API route.
-
--- ============================================================================
--- 3. purchases — журнал успешных покупок
--- ============================================================================
+-- без RLS — доступ только через service-role
 
 create table if not exists public.purchases (
   id uuid primary key default gen_random_uuid(),
@@ -47,7 +32,7 @@ drop policy if exists "users see own purchases" on public.purchases;
 create policy "users see own purchases"
   on public.purchases for select using (auth.uid() = user_id);
 
--- INSERT и UPDATE только через service-role (Stripe webhook).
+-- запись только через service-role (stripe webhook)
 drop policy if exists "no direct writes to purchases" on public.purchases;
 create policy "no direct writes to purchases"
   on public.purchases for insert with check (false);
