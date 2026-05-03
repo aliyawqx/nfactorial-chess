@@ -163,6 +163,8 @@ export const dictionaries = {
       resetSuccess: "Пароль обновлён. Можно входить.",
       resetError: "Не удалось обновить пароль. Возможно ссылка устарела.",
       backToLogin: "Назад ко входу",
+      linkExpired: "Ссылка для сброса пароля устарела или некорректна.",
+      requestNewLink: "Запросить новую ссылку",
     },
     online: {
       title: "Онлайн партия",
@@ -470,6 +472,8 @@ export const dictionaries = {
       resetSuccess: "Password updated. You can sign in.",
       resetError: "Failed to update password. The link may be expired.",
       backToLogin: "Back to sign in",
+      linkExpired: "The reset link is expired or invalid.",
+      requestNewLink: "Request a new link",
     },
     online: {
       title: "Online game",
@@ -776,6 +780,8 @@ export const dictionaries = {
       resetSuccess: "Құпиясөз жаңартылды. Кіруге болады.",
       resetError: "Құпиясөзді жаңарту сәтсіз. Сілтеме мерзімі өткен болуы мүмкін.",
       backToLogin: "Кіру бетіне қайту",
+      linkExpired: "Құпиясөзді қалпына келтіру сілтемесінің мерзімі өткен немесе ол жарамсыз.",
+      requestNewLink: "Жаңа сілтеме сұрау",
     },
     online: {
       title: "Онлайн ойын",

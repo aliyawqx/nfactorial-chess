@@ -125,8 +125,13 @@ export function useAuth(): UseAuthReturn {
       const supabase = getSupabaseClient();
       const origin =
         typeof window !== "undefined" ? window.location.origin : undefined;
+      // Пускаем recovery через /auth/callback чтобы код был обменян на session
+      // на сервере (PKCE flow). Иначе на /reset-password нет активной session
+      // и updateUser({password}) падает.
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: origin ? `${origin}/reset-password` : undefined,
+        redirectTo: origin
+          ? `${origin}/auth/callback?next=/reset-password`
+          : undefined,
       });
       return { error: error?.message ?? null };
     },
