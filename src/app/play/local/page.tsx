@@ -7,6 +7,7 @@ import { RotateCcw, Flag, Handshake, Undo2 } from "lucide-react";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MoveHistory } from "@/components/chess/MoveHistory";
 import { GameStatus } from "@/components/chess/GameStatus";
+import { GameOverModal } from "@/components/chess/GameOverModal";
 import { useChessGame } from "@/hooks/use-chess-game";
 import { Button } from "@/components/ui/Button";
 import { useT } from "@/lib/i18n/I18nProvider";
@@ -136,7 +137,9 @@ export default function LocalGamePage() {
 
           <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:gap-6">
             <div className="space-y-3 sm:space-y-4">
-              <GameStatus turn={turn} inCheck={inCheck} gameOver={gameOver} />
+              {!gameOver && (
+                <GameStatus turn={turn} inCheck={inCheck} gameOver={null} />
+              )}
               <ChessBoard
                 position={fen}
                 onMove={(p) => makeMove(p)}
@@ -147,6 +150,7 @@ export default function LocalGamePage() {
                 interactive={!gameOver}
               />
             </div>
+            <GameOverModal gameOver={gameOver} myColor={null} />
 
             <aside className="flex flex-col gap-3 sm:gap-4">
               <VoiceController

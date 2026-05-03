@@ -15,6 +15,7 @@ import { nanoid } from "nanoid";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MoveHistory } from "@/components/chess/MoveHistory";
 import { GameStatus } from "@/components/chess/GameStatus";
+import { GameOverModal } from "@/components/chess/GameOverModal";
 import { useChessGame } from "@/hooks/use-chess-game";
 import { useStockfish } from "@/hooks/use-stockfish";
 import { Button } from "@/components/ui/Button";
@@ -256,7 +257,9 @@ export default function AiGamePage() {
 
           <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:gap-6">
             <div className="space-y-3 sm:space-y-4">
-              <GameStatus turn={turn} inCheck={inCheck} gameOver={gameOver} />
+              {!gameOver && (
+                <GameStatus turn={turn} inCheck={inCheck} gameOver={null} />
+              )}
               {thinking && !gameOver && (
                 <div
                   role="status"
@@ -395,6 +398,10 @@ export default function AiGamePage() {
             </aside>
           </div>
         </div>
+        <GameOverModal
+          gameOver={gameOver}
+          myColor={playerColor === "white" ? "w" : "b"}
+        />
       </main>
     </>
   );
