@@ -6,6 +6,7 @@ import { Trophy, Loader2, Globe2 } from "lucide-react";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { buttonVariants } from "@/components/ui/Button";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useSupabaseUser } from "@/hooks/use-supabase-user";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -32,11 +33,14 @@ const COUNTRY_FLAGS: Record<string, string> = {
 
 export default function LeaderboardPage() {
   const { t } = useI18n();
+  const { user } = useSupabaseUser();
   const [rows, setRows] = useState<LeaderboardRow[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [countryFilter, setCountryFilter] = useState<string>("all");
   const [cityFilter, setCityFilter] = useState<string>("all");
+  const [myRow, setMyRow] = useState<LeaderboardRow | null>(null);
+  const [myRank, setMyRank] = useState<number | null>(null);
   const configured = isSupabaseConfigured();
 
   useEffect(() => {
@@ -77,6 +81,47 @@ export default function LeaderboardPage() {
     };
   }, [configured, countryFilter, cityFilter]);
 
+  // моя строка отдельно, если меня нет в видимом топ-50
+  useEffect(() => {
+    if (!configured || !user || !rows) {
+      setMyRow(null);
+      setMyRank(null);
+      return;
+    }
+    if (rows.some((r) => r.id === user.id)) {
+      setMyRow(null);
+      setMyRank(null);
+      return;
+    }
+    let cancelled = false;
+    const supabase = getSupabaseClient();
+    (async () => {
+      const { data: me } = await supabase
+        .from("leaderboard")
+        .select()
+        .eq("id", user.id)
+        .gt("games_played", 0)
+        .maybeSingle();
+      if (cancelled || !me) {
+        setMyRow(null);
+        setMyRank(null);
+        return;
+      }
+      const { count } = await supabase
+        .from("leaderboard")
+        .select("id", { count: "exact", head: true })
+        .gt("elo", me.elo)
+        .gt("games_played", 0);
+      if (!cancelled) {
+        setMyRow(me as LeaderboardRow);
+        setMyRank((count ?? 0) + 1);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, rows, configured]);
+
   const availableCountries = Array.from(
     new Set((rows ?? []).map((r) => r.country)),
   ).sort();
@@ -84,6 +129,83 @@ export default function LeaderboardPage() {
   const availableCities = Array.from(
     new Set((rows ?? []).map((r) => r.city).filter((c): c is string => !!c)),
   ).sort((a, b) => a.localeCompare(b, "ru"));
+
+  const renderRow = (
+    row: LeaderboardRow,
+    rank: number,
+    medal: string | null,
+    isYou: boolean,
+  ) => {
+    const name = row.display_name || "—";
+    const initial = name.slice(0, 1).toUpperCase();
+    const flag = COUNTRY_FLAGS[row.country] ?? "🌍";
+    return (
+      <tr
+        key={row.id}
+        className={cn(
+          "border-b last:border-0 transition-colors",
+          isYou
+            ? "bg-primary/10 hover:bg-primary/15"
+            : "hover:bg-secondary/30",
+        )}
+      >
+        <td className="px-3 py-2 tabular-nums text-muted-foreground">
+          {medal ? <span className="text-base">{medal}</span> : rank}
+        </td>
+        <td className="px-3 py-2">
+          <div className="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className={cn(
+                "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+                isYou
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary",
+              )}
+            >
+              {initial}
+            </span>
+            <span
+              className={cn(
+                "truncate",
+                isYou ? "font-semibold" : "font-medium",
+              )}
+            >
+              {name}
+            </span>
+            <span className="text-base" aria-label={row.country}>
+              {flag}
+            </span>
+            {isYou && (
+              <span className="rounded-sm bg-primary/20 px-1 py-px text-[9px] font-medium uppercase tracking-wider text-primary">
+                {t.online.you}
+              </span>
+            )}
+          </div>
+        </td>
+        <td className="hidden sm:table-cell px-3 py-2 text-muted-foreground">
+          {row.city ?? "—"}
+        </td>
+        <td className="px-3 py-2 text-right font-mono font-semibold tabular-nums">
+          {row.elo}
+        </td>
+        <td className="hidden sm:table-cell px-3 py-2 text-right font-mono tabular-nums text-muted-foreground">
+          {row.games_played}
+        </td>
+        <td className="hidden md:table-cell px-3 py-2 text-right font-mono tabular-nums text-xs text-muted-foreground">
+          <span className="text-emerald-600 dark:text-emerald-400">
+            {row.wins}
+          </span>
+          {" / "}
+          <span>{row.draws}</span>
+          {" / "}
+          <span className="text-rose-600 dark:text-rose-400">
+            {row.losses}
+          </span>
+        </td>
+      </tr>
+    );
+  };
 
   return (
     <>
@@ -207,58 +329,21 @@ export default function LeaderboardPage() {
                     </thead>
                     <tbody>
                       {rows.map((row, idx) => {
-                        const name = row.display_name || "—";
-                        const initial = name.slice(0, 1).toUpperCase();
                         const rank = idx + 1;
-                        const flag = COUNTRY_FLAGS[row.country] ?? "🌍";
                         const medal =
                           rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null;
-                        return (
-                          <tr key={row.id} className="border-b last:border-0 hover:bg-secondary/30">
-                            <td className="px-3 py-2 tabular-nums text-muted-foreground">
-                              {medal ? (
-                                <span className="text-base">{medal}</span>
-                              ) : (
-                                rank
-                              )}
-                            </td>
-                            <td className="px-3 py-2">
-                              <div className="flex items-center gap-2">
-                                <span
-                                  aria-hidden="true"
-                                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold"
-                                >
-                                  {initial}
-                                </span>
-                                <span className="font-medium truncate">{name}</span>
-                                <span className="text-base" aria-label={row.country}>
-                                  {flag}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="hidden sm:table-cell px-3 py-2 text-muted-foreground">
-                              {row.city ?? "—"}
-                            </td>
-                            <td className="px-3 py-2 text-right font-mono font-semibold tabular-nums">
-                              {row.elo}
-                            </td>
-                            <td className="hidden sm:table-cell px-3 py-2 text-right font-mono tabular-nums text-muted-foreground">
-                              {row.games_played}
-                            </td>
-                            <td className="hidden md:table-cell px-3 py-2 text-right font-mono tabular-nums text-xs text-muted-foreground">
-                              <span className="text-emerald-600 dark:text-emerald-400">
-                                {row.wins}
-                              </span>{" "}
-                              /{" "}
-                              <span>{row.draws}</span>{" "}
-                              /{" "}
-                              <span className="text-rose-600 dark:text-rose-400">
-                                {row.losses}
-                              </span>
+                        return renderRow(row, rank, medal, user?.id === row.id);
+                      })}
+                      {myRow && myRank !== null && (
+                        <>
+                          <tr className="border-b last:border-0">
+                            <td colSpan={6} className="px-3 py-1.5 text-center text-xs text-muted-foreground">
+                              · · ·
                             </td>
                           </tr>
-                        );
-                      })}
+                          {renderRow(myRow, myRank, null, true)}
+                        </>
+                      )}
                     </tbody>
                   </table>
                 </div>

@@ -2,12 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, ArrowRight, Loader2 } from "lucide-react";
+import { Plus, ArrowRight, Loader2, Clock as ClockIcon } from "lucide-react";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useSupabaseUser } from "@/hooks/use-supabase-user";
 import { createRoom, getRoomByInvite } from "@/lib/multiplayer/room";
+import {
+  TIME_CONTROLS,
+  DEFAULT_TIME_CONTROL_ID,
+  findTimeControl,
+} from "@/lib/multiplayer/time-controls";
 import { cn } from "@/lib/utils";
 
 export default function OnlineLobbyPage() {
@@ -18,6 +23,7 @@ export default function OnlineLobbyPage() {
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tcId, setTcId] = useState<string>(DEFAULT_TIME_CONTROL_ID);
 
   const handleCreate = async () => {
     setError(null);
@@ -25,7 +31,14 @@ export default function OnlineLobbyPage() {
     try {
       const u = user ?? (await ensureSignedIn());
       if (!u) throw new Error("Не удалось войти");
-      const room = await createRoom({ hostId: u.id, hostColor: "white" });
+      const tc = findTimeControl(tcId);
+      const room = await createRoom({
+        hostId: u.id,
+        hostColor: "white",
+        timeControl: tcId,
+        initialMs: tc?.initialMs ?? null,
+        incrementMs: tc?.incrementMs ?? 0,
+      });
       router.push(`/play/online/${room.invite_code}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -78,6 +91,44 @@ export default function OnlineLobbyPage() {
                 <p className="mb-4 text-sm text-muted-foreground">
                   {t.online.shareLink}
                 </p>
+
+                <label
+                  htmlFor="time-control"
+                  className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                >
+                  <ClockIcon className="h-3 w-3" aria-hidden="true" />
+                  {t.online.timeControl}
+                </label>
+                <div
+                  role="radiogroup"
+                  aria-label={t.online.timeControl}
+                  id="time-control"
+                  className="mb-4 grid grid-cols-2 gap-1.5 sm:grid-cols-3"
+                >
+                  {TIME_CONTROLS.map((tc) => {
+                    const active = tcId === tc.id;
+                    const label =
+                      tc.id === "unlimited" ? t.online.timeControlUnlimited : tc.label;
+                    return (
+                      <button
+                        key={tc.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => setTcId(tc.id)}
+                        className={cn(
+                          "rounded-md border px-2 py-1.5 text-xs font-medium transition",
+                          active
+                            ? "border-primary bg-primary/10 text-foreground"
+                            : "border-input text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                        )}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <Button
                   onClick={handleCreate}
                   disabled={creating}

@@ -6,8 +6,9 @@ import { Chess, type Square } from "chess.js";
 import { Copy, Check, Loader2, Users, Flag, Handshake } from "lucide-react";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MoveHistory } from "@/components/chess/MoveHistory";
-import { GameStatus } from "@/components/chess/GameStatus";
 import { PlayerCard, type PlayerInfo } from "@/components/chess/PlayerCard";
+import { Clock } from "@/components/chess/Clock";
+import { GameOverModal } from "@/components/chess/GameOverModal";
 import { Button } from "@/components/ui/Button";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useSupabaseUser } from "@/hooks/use-supabase-user";
@@ -228,6 +229,96 @@ export default function OnlineGamePage({ params }: PageProps) {
     });
   }, [gameOver, room, user?.id]);
 
+  // когда сервер финализировал партию (status=finished) — подхватываем
+  // итог из таблицы games и показываем "Партия окончена" (для случаев
+  // когда мы НЕ автор timeout-вызова, например соперник вышел по времени).
+  useEffect(() => {
+    if (!room || room.status !== "finished" || localGameOver) return;
+    console.log("[room-finished-watcher] room finished, fetching game...");
+    let cancelled = false;
+    (async () => {
+      const supabase = getSupabaseClient();
+      const { data: game } = await supabase
+        .from("games")
+        .select("result, termination")
+        .eq("room_id", room.id)
+        .maybeSingle();
+      console.log("[room-finished-watcher] fetched game", game);
+      if (cancelled || !game) return;
+      const result = game.result as GameOver["result"];
+      const termination = (game.termination ?? "abandoned") as GameOver["termination"];
+      const winner: GameOver["winner"] | undefined =
+        result === "1-0" ? "w" : result === "0-1" ? "b" : undefined;
+      setLocalGameOver({ result, termination, winner });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [room, localGameOver]);
+
+  const timeoutCalledRef = useRef(false);
+  useEffect(() => {
+    if (
+      !room ||
+      room.initial_ms == null ||
+      room.status === "finished" ||
+      isWaiting ||
+      gameOver ||
+      timeoutCalledRef.current
+    ) {
+      return;
+    }
+    const turn = chessState.turn();
+    const clock = turn === "w" ? room.white_clock_ms : room.black_clock_ms;
+    if (clock == null) {
+      console.warn("[timeout-watcher] clock is null/undefined — миграция 00003 запущена?");
+      return;
+    }
+    const startedAt = room.last_move_at
+      ? new Date(room.last_move_at).getTime()
+      : new Date(room.created_at).getTime();
+    const remaining = clock - (Date.now() - startedAt);
+
+    const callTimeout = async () => {
+      timeoutCalledRef.current = true;
+      console.log("[timeout-watcher] POST /api/games/timeout", room.id);
+      try {
+        const res = await fetch("/api/games/timeout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ roomId: room.id }),
+        });
+        const json = await res.json();
+        console.log("[timeout-watcher] response", res.status, json);
+        if (!res.ok) {
+          timeoutCalledRef.current = false;
+          return;
+        }
+        if (json.result && json.termination) {
+          const winner: GameOver["winner"] | undefined =
+            json.result === "1-0" ? "w" : json.result === "0-1" ? "b" : undefined;
+          setLocalGameOver({
+            result: json.result,
+            termination: json.termination,
+            winner,
+          });
+        }
+      } catch (e) {
+        console.error("[timeout-watcher] failed", e);
+        timeoutCalledRef.current = false;
+      }
+    };
+
+    if (remaining > 0) {
+      console.log(`[timeout-watcher] arming for ${turn} in ${remaining}ms`);
+      const id = setTimeout(callTimeout, remaining + 200);
+      return () => clearTimeout(id);
+    } else {
+      console.log(`[timeout-watcher] already over for ${turn}`);
+      callTimeout();
+    }
+  }, [room, chessState, isWaiting, gameOver]);
+
   const handleMove = useCallback(
     (params: { from: Square; to: Square; promotion?: "q" | "r" | "b" | "n" }) => {
       if (!room || !user || !roomId) return null;
@@ -419,23 +510,42 @@ export default function OnlineGamePage({ params }: PageProps) {
 
           <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:gap-6">
             <div className="space-y-3 sm:space-y-4">
-              <PlayerCard
-                player={user?.id === room.host_id ? guestInfo : hostInfo}
-                color={
-                  myColor === "w"
-                    ? "black"
-                    : myColor === "b"
-                      ? "white"
-                      : "black"
-                }
-                loading={playersLoading}
-                isCurrentTurn={
-                  !gameOver &&
-                  !isWaiting &&
-                  ((myColor === "w" && chessState.turn() === "b") ||
-                    (myColor === "b" && chessState.turn() === "w"))
-                }
-              />
+              <div className="flex items-center gap-3">
+                <PlayerCard
+                  player={user?.id === room.host_id ? guestInfo : hostInfo}
+                  color={
+                    myColor === "w"
+                      ? "black"
+                      : myColor === "b"
+                        ? "white"
+                        : "black"
+                  }
+                  loading={playersLoading}
+                  isCurrentTurn={
+                    !gameOver &&
+                    !isWaiting &&
+                    ((myColor === "w" && chessState.turn() === "b") ||
+                      (myColor === "b" && chessState.turn() === "w"))
+                  }
+                  className="flex-1"
+                />
+                {room.initial_ms !== null && (
+                  <Clock
+                    timeMs={
+                      myColor === "w"
+                        ? room.black_clock_ms
+                        : room.white_clock_ms
+                    }
+                    running={
+                      !gameOver &&
+                      !isWaiting &&
+                      ((myColor === "w" && chessState.turn() === "b") ||
+                        (myColor === "b" && chessState.turn() === "w"))
+                    }
+                    lastMoveAt={room.last_move_at}
+                  />
+                )}
+              </div>
               <ChessBoard
                 position={fen}
                 onMove={(p) => handleMove(p as { from: Square; to: Square; promotion?: "q" | "r" | "b" | "n" })}
@@ -446,21 +556,29 @@ export default function OnlineGamePage({ params }: PageProps) {
                 orientation={orientation}
                 interactive={!gameOver && isMyTurn && !isWaiting}
               />
-              <PlayerCard
-                player={user?.id === room.host_id ? hostInfo : guestInfo}
-                color={myColor === "b" ? "black" : "white"}
-                isYou
-                loading={playersLoading}
-                isCurrentTurn={!gameOver && !isWaiting && isMyTurn}
-              />
-              {gameOver && (
-                <GameStatus
-                  turn={chessState.turn()}
-                  inCheck={inCheck}
-                  gameOver={gameOver}
+              <div className="flex items-center gap-3">
+                <PlayerCard
+                  player={user?.id === room.host_id ? hostInfo : guestInfo}
+                  color={myColor === "b" ? "black" : "white"}
+                  isYou
+                  loading={playersLoading}
+                  isCurrentTurn={!gameOver && !isWaiting && isMyTurn}
+                  className="flex-1"
                 />
-              )}
+                {room.initial_ms !== null && (
+                  <Clock
+                    timeMs={
+                      myColor === "w"
+                        ? room.white_clock_ms
+                        : room.black_clock_ms
+                    }
+                    running={!gameOver && !isWaiting && isMyTurn}
+                    lastMoveAt={room.last_move_at}
+                  />
+                )}
+              </div>
             </div>
+            <GameOverModal gameOver={gameOver} myColor={myColor} />
 
             <aside className="flex flex-col gap-3 sm:gap-4">
               <VoiceController
@@ -497,7 +615,11 @@ export default function OnlineGamePage({ params }: PageProps) {
                 </Button>
               </div>
 
-              <MoveHistory history={history} className="min-h-[300px] lg:min-h-[400px]" />
+              <MoveHistory
+                history={history}
+                timings={moves.map((m) => m.time_spent_ms ?? null)}
+                className="min-h-[300px] lg:min-h-[400px]"
+              />
             </aside>
           </div>
         </div>

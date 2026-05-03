@@ -108,6 +108,10 @@ export interface Database {
           status: "waiting" | "active" | "finished" | "abandoned";
           current_fen: string;
           last_move_at: string | null;
+          initial_ms: number | null;
+          increment_ms: number;
+          white_clock_ms: number | null;
+          black_clock_ms: number | null;
           created_at: string;
           expires_at: string;
         };
@@ -121,6 +125,10 @@ export interface Database {
           status?: "waiting" | "active" | "finished" | "abandoned";
           current_fen?: string;
           last_move_at?: string | null;
+          initial_ms?: number | null;
+          increment_ms?: number;
+          white_clock_ms?: number | null;
+          black_clock_ms?: number | null;
           created_at?: string;
           expires_at?: string;
         };
@@ -130,6 +138,8 @@ export interface Database {
           status?: "waiting" | "active" | "finished" | "abandoned";
           current_fen?: string;
           last_move_at?: string | null;
+          white_clock_ms?: number | null;
+          black_clock_ms?: number | null;
         };
         Relationships: [];
       };
@@ -142,6 +152,7 @@ export interface Database {
           fen_after: string;
           by_user_id: string;
           server_received_at: string;
+          time_spent_ms: number | null;
         };
         Insert: {
           room_id: string;
@@ -151,6 +162,7 @@ export interface Database {
           fen_after: string;
           by_user_id: string;
           server_received_at?: string;
+          time_spent_ms?: number | null;
         };
         Update: {
           uci?: string;

@@ -7,10 +7,18 @@ import { useT } from "@/lib/i18n/I18nProvider";
 
 interface MoveHistoryProps {
   history: Move[];
+  timings?: (number | null)[];
   className?: string;
 }
 
-export function MoveHistory({ history, className }: MoveHistoryProps) {
+function formatSpent(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined) return "";
+  const sec = ms / 1000;
+  if (sec < 10) return ` (${sec.toFixed(1)}s)`;
+  return ` (${Math.round(sec)}s)`;
+}
+
+export function MoveHistory({ history, timings, className }: MoveHistoryProps) {
   const t = useT();
   const listRef = useRef<HTMLOListElement | null>(null);
 
@@ -20,12 +28,20 @@ export function MoveHistory({ history, className }: MoveHistoryProps) {
     }
   }, [history.length]);
 
-  const pairs: { number: number; white?: Move; black?: Move }[] = [];
+  const pairs: {
+    number: number;
+    white?: Move;
+    black?: Move;
+    whiteSpent?: number | null;
+    blackSpent?: number | null;
+  }[] = [];
   for (let i = 0; i < history.length; i += 2) {
     pairs.push({
       number: i / 2 + 1,
       white: history[i],
       black: history[i + 1],
+      whiteSpent: timings?.[i],
+      blackSpent: timings?.[i + 1],
     });
   }
 
@@ -58,8 +74,22 @@ export function MoveHistory({ history, className }: MoveHistoryProps) {
               <span className="text-muted-foreground tabular-nums">
                 {pair.number}.
               </span>
-              <span>{pair.white?.san ?? ""}</span>
-              <span>{pair.black?.san ?? ""}</span>
+              <span>
+                {pair.white?.san ?? ""}
+                {pair.white && (
+                  <span className="text-muted-foreground/70 text-xs">
+                    {formatSpent(pair.whiteSpent)}
+                  </span>
+                )}
+              </span>
+              <span>
+                {pair.black?.san ?? ""}
+                {pair.black && (
+                  <span className="text-muted-foreground/70 text-xs">
+                    {formatSpent(pair.blackSpent)}
+                  </span>
+                )}
+              </span>
             </li>
           ))
         )}

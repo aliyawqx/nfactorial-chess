@@ -21,11 +21,16 @@ export interface CreateRoomParams {
   hostId: string;
   hostColor?: "white" | "black" | "random";
   timeControl?: string;
+  initialMs?: number | null;
+  incrementMs?: number;
 }
 
 export async function createRoom(params: CreateRoomParams): Promise<Room> {
   const supabase = getSupabaseClient();
   const inviteCode = generateInviteCode();
+
+  const initialMs = params.initialMs ?? null;
+  const incrementMs = params.incrementMs ?? 0;
 
   const { data, error } = await supabase
     .from("rooms")
@@ -35,6 +40,10 @@ export async function createRoom(params: CreateRoomParams): Promise<Room> {
       host_color: params.hostColor ?? "white",
       time_control: params.timeControl ?? "unlimited",
       current_fen: INITIAL_FEN,
+      initial_ms: initialMs,
+      increment_ms: incrementMs,
+      white_clock_ms: initialMs,
+      black_clock_ms: initialMs,
     })
     .select()
     .single();
