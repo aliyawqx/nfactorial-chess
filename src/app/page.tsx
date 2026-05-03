@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   Mic,
   Eye,
@@ -18,6 +19,16 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { buttonVariants } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n/I18nProvider";
+
+const HeroBoard = dynamic(
+  () => import("@/components/chess/HeroBoard").then((m) => m.HeroBoard),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="mx-auto aspect-square w-full max-w-[460px] animate-pulse rounded-2xl bg-secondary/50" />
+    ),
+  },
+);
 
 export default function Home() {
   const t = useT();
@@ -46,37 +57,39 @@ export default function Home() {
     <>
       <AppHeader />
       <main id="main" className="flex-1">
-        <section className="relative overflow-hidden border-b">
-          <div className="container mx-auto max-w-6xl px-4 py-16 sm:py-24">
-            <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-secondary/50 px-3 py-1 text-xs font-medium text-muted-foreground">
-                <span aria-hidden="true" className="text-base">♞</span>
-                {t.home.heroTagline}
-              </div>
-              <h1 className="mb-6 text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
-                {t.home.heroTitle1}
-                <span className="block bg-gradient-to-r from-primary to-board-dark bg-clip-text text-transparent">
-                  {t.home.heroTitle2}
-                </span>
-              </h1>
-              <p className="mb-8 max-w-2xl text-balance text-base sm:text-lg text-muted-foreground">
-                {t.home.heroDescription}
-              </p>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/play/local"
-                  className={cn(buttonVariants({ size: "lg" }), "gap-2")}
-                >
-                  {t.home.ctaPlay}
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-                <Link
-                  href="/accessibility"
-                  className={buttonVariants({ size: "lg", variant: "outline" })}
-                >
-                  {t.home.ctaA11y}
-                </Link>
-              </div>
+        <section className="relative isolate overflow-hidden border-b">
+          <HeroBoard />
+          <div className="container relative z-10 mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-6xl flex-col items-center justify-center px-4 py-12 sm:py-16 text-center">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-card/70 backdrop-blur px-3 py-1 text-xs font-medium text-muted-foreground">
+              <span aria-hidden="true" className="text-base">♞</span>
+              {t.home.heroTagline}
+            </div>
+            <h1 className="mb-6 max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
+              {t.home.heroTitle1}
+              <span className="block bg-gradient-to-r from-primary to-board-dark bg-clip-text text-transparent">
+                {t.home.heroTitle2}
+              </span>
+            </h1>
+            <p className="mb-8 max-w-2xl text-balance text-base sm:text-lg text-muted-foreground">
+              {t.home.heroDescription}
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/play/local"
+                className={cn(buttonVariants({ size: "lg" }), "gap-2 shadow-lg")}
+              >
+                {t.home.ctaPlay}
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/accessibility"
+                className={cn(
+                  buttonVariants({ size: "lg", variant: "outline" }),
+                  "bg-background/70 backdrop-blur",
+                )}
+              >
+                {t.home.ctaA11y}
+              </Link>
             </div>
           </div>
         </section>

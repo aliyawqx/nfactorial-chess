@@ -194,3 +194,31 @@ a:focus-visible {
   white-space: nowrap;
   border-width: 0;
 }
+
+@keyframes hero-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-18px) rotate(3deg);
+  }
+}
+
+.hero-float {
+  animation-name: hero-float;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes hero-tilt-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) perspective(1400px) rotateX(28deg) rotateZ(-8deg) scale(0.95);
+  }
+  50% {
+    transform: translate(-50%, -50%) perspective(1400px) rotateX(28deg) rotateZ(-8deg) scale(0.97);
+  }
+}
+
+.hero-tilt {
+  animation: hero-tilt-pulse 14s ease-in-out infinite;
+}
