@@ -21,6 +21,9 @@ export interface Database {
           country: string;
           elo: number;
           preferred_language: "ru" | "en" | "kk";
+          is_pro: boolean;
+          active_skin: string;
+          pro_purchased_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -32,6 +35,9 @@ export interface Database {
           country?: string;
           elo?: number;
           preferred_language?: "ru" | "en" | "kk";
+          is_pro?: boolean;
+          active_skin?: string;
+          pro_purchased_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -43,8 +49,55 @@ export interface Database {
           country?: string;
           elo?: number;
           preferred_language?: "ru" | "en" | "kk";
+          is_pro?: boolean;
+          active_skin?: string;
+          pro_purchased_at?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
+      };
+      purchases: {
+        Row: {
+          id: string;
+          user_id: string;
+          product_id: string;
+          amount_cents: number;
+          currency: string;
+          stripe_session_id: string | null;
+          stripe_payment_intent_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          product_id: string;
+          amount_cents: number;
+          currency?: string;
+          stripe_session_id?: string | null;
+          stripe_payment_intent_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<{
+          product_id: string;
+          amount_cents: number;
+          currency: string;
+        }>;
+        Relationships: [];
+      };
+      stripe_events: {
+        Row: {
+          id: string;
+          type: string;
+          payload: Json;
+          processed_at: string;
+        };
+        Insert: {
+          id: string;
+          type: string;
+          payload: Json;
+          processed_at?: string;
+        };
+        Update: Partial<{ type: string }>;
         Relationships: [];
       };
       rooms: {

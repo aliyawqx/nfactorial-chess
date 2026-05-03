@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
-import { Loader2, Check, User as UserIcon } from "lucide-react";
+import { Loader2, Check, User as UserIcon, Lock, Sparkles } from "lucide-react";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -10,6 +10,7 @@ import { useSupabaseUser } from "@/hooks/use-supabase-user";
 import { useProfile } from "@/hooks/use-profile";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n/config";
+import { ALL_SKIN_IDS, SKINS, type SkinId, isValidSkin } from "@/lib/chess/skins";
 import { cn } from "@/lib/utils";
 
 const COUNTRIES = [
@@ -35,9 +36,12 @@ export default function ProfileSettingsPage() {
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("KZ");
   const [language, setLanguage] = useState<Locale>("ru");
+  const [activeSkin, setActiveSkin] = useState<SkinId>("cburnett");
   const [submitting, setSubmitting] = useState(false);
   const [savedOk, setSavedOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isPro = profile?.is_pro === true;
 
   // Подгружаем текущие значения когда profile приходит
   useEffect(() => {
@@ -46,6 +50,7 @@ export default function ProfileSettingsPage() {
       setCity(profile.city ?? "");
       setCountry(profile.country || "KZ");
       setLanguage((profile.preferred_language as Locale) ?? "ru");
+      setActiveSkin(isValidSkin(profile.active_skin) ? profile.active_skin : "cburnett");
     }
   }, [profile]);
 
@@ -60,6 +65,9 @@ export default function ProfileSettingsPage() {
     const trimmedName = displayName.trim() || null;
     const trimmedCity = city.trim() || null;
 
+    // Скин может выбираться только Pro; не-Pro принудительно cburnett
+    const finalSkin = isPro ? activeSkin : "cburnett";
+
     const { error: dbErr } = await supabase
       .from("profiles")
       .update({
@@ -67,6 +75,7 @@ export default function ProfileSettingsPage() {
         city: trimmedCity,
         country: country || "KZ",
         preferred_language: language,
+        active_skin: finalSkin,
         updated_at: new Date().toISOString(),
       })
       .eq("id", user.id);
@@ -243,6 +252,73 @@ export default function ProfileSettingsPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Skin selector */}
+                <div>
+                  <div className="mb-2 flex items-center justify-between">
+                    <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      {t.shop.skinSelector}
+                    </label>
+                    {!isPro && (
+                      <Link
+                        href="/shop"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 hover:underline dark:text-amber-400"
+                      >
+                        <Sparkles className="h-3 w-3" aria-hidden="true" />
+                        Pro
+                      </Link>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {ALL_SKIN_IDS.map((id) => {
+                      const skin = SKINS[id];
+                      const locked = skin.proOnly && !isPro;
+                      const selected = activeSkin === id;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => !locked && setActiveSkin(id)}
+                          disabled={locked}
+                          aria-pressed={selected}
+                          className={cn(
+                            "relative flex flex-col items-center gap-2 rounded-md border p-2 transition",
+                            selected
+                              ? "border-primary bg-primary/5 ring-2 ring-primary/30"
+                              : "border-input hover:border-foreground/30",
+                            locked && "opacity-60 cursor-not-allowed",
+                          )}
+                        >
+                          <div className="flex h-12 w-12 items-center justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={`/pieces/${id}/wN.svg`}
+                              alt=""
+                              className="h-full w-full"
+                              draggable={false}
+                            />
+                          </div>
+                          <span className="text-[11px] font-medium">{skin.name}</span>
+                          {locked && (
+                            <span className="absolute right-1 top-1 inline-flex items-center gap-0.5 rounded-sm bg-muted px-1 text-[9px] font-semibold uppercase">
+                              <Lock className="h-2.5 w-2.5" aria-hidden="true" />
+                            </span>
+                          )}
+                          {selected && !locked && (
+                            <span className="absolute right-1 top-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                              <Check className="h-2.5 w-2.5" aria-hidden="true" />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {!isPro && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {t.shop.skinsBlocked}
+                    </p>
+                  )}
                 </div>
 
                 {/* Current ELO (readonly) */}

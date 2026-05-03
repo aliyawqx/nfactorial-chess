@@ -9,6 +9,8 @@ import { BoardA11yOverlay } from "./BoardA11yOverlay";
 import { useAnnounce } from "@/components/a11y/LiveRegion";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { describeMove, describeGameOver } from "@/lib/chess/announce";
+import { useProfile } from "@/hooks/use-profile";
+import { pieceRenderObject, isValidSkin } from "@/lib/chess/skins";
 import type { GameOver } from "@/types/chess";
 
 interface ChessBoardProps {
@@ -46,6 +48,9 @@ export function ChessBoard({
   const announce = useAnnounce();
   const { t } = useI18n();
   const lastAnnouncedFenRef = useRef<string>("");
+  const { profile } = useProfile();
+  const skinId = isValidSkin(profile?.active_skin) ? profile!.active_skin : "cburnett";
+  const pieces = useMemo(() => pieceRenderObject(skinId), [skinId]);
 
   const tryMove = useCallback(
     (from: Square, to: Square): boolean => {
@@ -167,6 +172,7 @@ export function ChessBoard({
           allowDragging: interactive,
           allowDrawingArrows: false,
           showNotation: true,
+          pieces,
           lightSquareStyle,
           darkSquareStyle,
           squareStyles,

@@ -65,6 +65,9 @@ export function useChessGame(
   const chessRef = useRef<Chess>(new Chess(options.initialFen));
   const [, force] = useState(0);
   const rerender = useCallback(() => force((n) => n + 1), []);
+  // Результат партии "извне правил доски": resignation / draw agreement.
+  // chess.js не знает про эти исходы — храним их отдельным state.
+  const [manualGameOver, setManualGameOver] = useState<GameOver | null>(null);
   const onMoveRef = useRef(options.onMove);
   const onGameOverRef = useRef(options.onGameOver);
   const storageKeyRef = useRef(options.storageKey);
@@ -119,6 +122,8 @@ export function useChessGame(
 
   const makeMove: UseChessGameReturn["makeMove"] = useCallback(
     ({ from, to, promotion }) => {
+      // Если партия уже завершена сдачей/ничьей — больше нельзя ходить
+      if (manualGameOver) return null;
       try {
         const move = chessRef.current.move({
           from,
@@ -136,7 +141,7 @@ export function useChessGame(
         return null;
       }
     },
-    [rerender, persist, buildCtx],
+    [rerender, persist, buildCtx, manualGameOver],
   );
 
   const undo = useCallback(() => {
@@ -148,6 +153,7 @@ export function useChessGame(
   const reset = useCallback(
     (fen?: string) => {
       chessRef.current = new Chess(fen);
+      setManualGameOver(null);
       rerender();
       const key = storageKeyRef.current;
       if (key && typeof window !== "undefined") {
@@ -164,29 +170,27 @@ export function useChessGame(
   const resign = useCallback(
     (color: "w" | "b") => {
       const winner = color === "w" ? "b" : "w";
-      onGameOverRef.current?.(
-        {
-          result: winner === "w" ? "1-0" : "0-1",
-          termination: "resignation",
-          winner,
-        },
-        buildCtx(),
-      );
-      rerender();
+      const over: GameOver = {
+        result: winner === "w" ? "1-0" : "0-1",
+        termination: "resignation",
+        winner,
+      };
+      setManualGameOver(over);
+      onGameOverRef.current?.(over, buildCtx());
     },
-    [rerender, buildCtx],
+    [buildCtx],
   );
 
   const agreeDraw = useCallback(() => {
-    onGameOverRef.current?.(
-      {
-        result: "1/2-1/2",
-        termination: "draw_agreed",
-      },
-      buildCtx(),
-    );
-    rerender();
-  }, [rerender, buildCtx]);
+    const over: GameOver = {
+      result: "1/2-1/2",
+      termination: "draw_agreed",
+    };
+    setManualGameOver(over);
+    onGameOverRef.current?.(over, buildCtx());
+  }, [buildCtx]);
+
+  const computedGameOver = manualGameOver ?? detectGameOver(chess);
 
   return {
     fen: chess.fen(),
@@ -194,8 +198,8 @@ export function useChessGame(
     history: chess.history({ verbose: true }) as Move[],
     turn: chess.turn(),
     inCheck: chess.inCheck(),
-    isGameOver: chess.isGameOver(),
-    gameOver: detectGameOver(chess),
+    isGameOver: chess.isGameOver() || manualGameOver !== null,
+    gameOver: computedGameOver,
     legalMoves,
     legalMovesFrom,
     makeMove,

@@ -100,12 +100,25 @@ export function UserMenu() {
       >
         <span
           aria-hidden="true"
-          className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
+          className={cn(
+            "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+            profile?.is_pro
+              ? "bg-gradient-to-br from-amber-400 to-fuchsia-500 text-white"
+              : "bg-primary text-primary-foreground",
+          )}
         >
           {initial}
         </span>
-        <span className="hidden sm:block min-w-0 flex-1 truncate text-left">
-          {name}
+        <span className="hidden sm:flex min-w-0 flex-1 items-center gap-1 text-left">
+          <span className="truncate">{name}</span>
+          {profile?.is_pro && (
+            <span
+              aria-label={t.common.pro}
+              className="inline-flex shrink-0 items-center rounded-sm bg-gradient-to-br from-amber-400 to-fuchsia-500 px-1 py-px text-[9px] font-bold uppercase text-white"
+            >
+              Pro
+            </span>
+          )}
         </span>
       </button>
       {open && (
