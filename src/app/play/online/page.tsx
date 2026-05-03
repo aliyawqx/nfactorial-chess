@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, ArrowRight, Loader2, Clock as ClockIcon } from "lucide-react";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { Button, buttonVariants } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useSupabaseUser } from "@/hooks/use-supabase-user";
 import { createRoom, getRoomByInvite } from "@/lib/multiplayer/room";
@@ -185,11 +185,6 @@ export default function OnlineLobbyPage() {
             </div>
           )}
 
-          <p className="mt-8 text-center text-xs text-muted-foreground">
-            <a href="/play/local" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-              {t.online.back}
-            </a>
-          </p>
         </div>
       </main>
     </>
