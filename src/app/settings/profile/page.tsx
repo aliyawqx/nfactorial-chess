@@ -11,6 +11,7 @@ import { useProfile } from "@/hooks/use-profile";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n/config";
 import { ALL_SKIN_IDS, SKINS, type SkinId, isValidSkin } from "@/lib/chess/skins";
+import { KZ_CITIES } from "@/lib/data/cities";
 import { cn } from "@/lib/utils";
 
 const COUNTRIES = [
@@ -93,6 +94,13 @@ export default function ProfileSettingsPage() {
         data: { display_name: trimmedName },
       });
     }
+
+    // Освежаем materialized view leaderboard чтобы новый город/имя
+    // подхватились в /leaderboard без задержки. Best-effort.
+    void supabase.rpc("refresh_leaderboard").then(
+      () => null,
+      () => null,
+    );
 
     // Применяем смену UI-локали
     setLocale(language);
@@ -199,15 +207,31 @@ export default function ProfileSettingsPage() {
                   >
                     {t.profile.city}
                   </label>
-                  <input
-                    id="city"
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    maxLength={64}
-                    placeholder={t.profile.cityPlaceholder}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
+                  {country === "KZ" ? (
+                    <select
+                      id="city"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">{t.profile.cityPlaceholderSelect}</option>
+                      {KZ_CITIES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      id="city"
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      maxLength={64}
+                      placeholder={t.profile.cityPlaceholder}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                  )}
                 </div>
 
                 {/* Country */}

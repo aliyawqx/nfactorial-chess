@@ -165,6 +165,7 @@ export const dictionaries = {
       backToLogin: "Назад ко входу",
       linkExpired: "Ссылка для сброса пароля устарела или некорректна.",
       requestNewLink: "Запросить новую ссылку",
+      samePasswordError: "Новый пароль должен отличаться от текущего.",
     },
     online: {
       title: "Онлайн партия",
@@ -186,6 +187,8 @@ export const dictionaries = {
       anonymousNotice: "Вы играете анонимно. После регистрации (скоро) сможете сохранять профиль и рейтинг.",
       back: "К лобби",
       newRoom: "Новая комната",
+      rank: "Место",
+      noRank: "—",
     },
     shop: {
       heroTitle: "VoiceChess Pro",
@@ -219,6 +222,7 @@ export const dictionaries = {
       displayNameHint: "Как вас увидят другие игроки",
       city: "Город",
       cityPlaceholder: "Например: Алматы",
+      cityPlaceholderSelect: "Выберите город",
       country: "Страна",
       language: "Язык интерфейса",
       save: "Сохранить",
@@ -474,6 +478,7 @@ export const dictionaries = {
       backToLogin: "Back to sign in",
       linkExpired: "The reset link is expired or invalid.",
       requestNewLink: "Request a new link",
+      samePasswordError: "New password must be different from the current one.",
     },
     online: {
       title: "Online game",
@@ -495,6 +500,8 @@ export const dictionaries = {
       anonymousNotice: "You're playing anonymously. After signup (coming soon) you'll be able to save profile and rating.",
       back: "Back to lobby",
       newRoom: "New room",
+      rank: "Rank",
+      noRank: "—",
     },
     shop: {
       heroTitle: "VoiceChess Pro",
@@ -528,6 +535,7 @@ export const dictionaries = {
       displayNameHint: "How other players will see you",
       city: "City",
       cityPlaceholder: "e.g. Almaty",
+      cityPlaceholderSelect: "Choose a city",
       country: "Country",
       language: "Interface language",
       save: "Save",
@@ -782,6 +790,7 @@ export const dictionaries = {
       backToLogin: "Кіру бетіне қайту",
       linkExpired: "Құпиясөзді қалпына келтіру сілтемесінің мерзімі өткен немесе ол жарамсыз.",
       requestNewLink: "Жаңа сілтеме сұрау",
+      samePasswordError: "Жаңа құпиясөз қолданыстағыдан өзгеше болуы керек.",
     },
     online: {
       title: "Онлайн ойын",
@@ -803,6 +812,8 @@ export const dictionaries = {
       anonymousNotice: "Сіз анонимді ойнайсыз. Тіркелуден кейін (жақын арада) профильді сақтауға болады.",
       back: "Лоббиге",
       newRoom: "Жаңа бөлме",
+      rank: "Орын",
+      noRank: "—",
     },
     shop: {
       heroTitle: "VoiceChess Pro",
@@ -836,6 +847,7 @@ export const dictionaries = {
       displayNameHint: "Басқа ойыншылар сізді қалай көреді",
       city: "Қала",
       cityPlaceholder: "Мысалы: Алматы",
+      cityPlaceholderSelect: "Қаланы таңдаңыз",
       country: "Ел",
       language: "Интерфейс тілі",
       save: "Сақтау",

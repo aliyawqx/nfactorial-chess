@@ -36,6 +36,7 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [countryFilter, setCountryFilter] = useState<string>("all");
+  const [cityFilter, setCityFilter] = useState<string>("all");
   const configured = isSupabaseConfigured();
 
   useEffect(() => {
@@ -56,6 +57,9 @@ export default function LeaderboardPage() {
     if (countryFilter !== "all") {
       query = query.eq("country", countryFilter);
     }
+    if (cityFilter !== "all") {
+      query = query.eq("city", cityFilter);
+    }
 
     query.then(({ data, error: err }) => {
       if (cancelled) return;
@@ -71,12 +75,21 @@ export default function LeaderboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [configured, countryFilter]);
+  }, [configured, countryFilter, cityFilter]);
 
   // Список стран для фильтра — берётся из текущей выборки
   const availableCountries = Array.from(
     new Set((rows ?? []).map((r) => r.country)),
   ).sort();
+
+  // Список городов для фильтра — только не-null, отсортированные
+  const availableCities = Array.from(
+    new Set((rows ?? []).map((r) => r.city).filter((c): c is string => !!c)),
+  ).sort((a, b) => a.localeCompare(b, "ru"));
+
+  // Сброс city-фильтра при смене страны (если такого города нет в новой выборке)
+  // — отдельным эффектом не нужен: при смене country query перезапустится,
+  // и если cityFilter не подходит — таблица будет пустой, юзер увидит и сбросит.
 
   return (
     <>
@@ -101,25 +114,55 @@ export default function LeaderboardPage() {
             </div>
           ) : (
             <>
-              {/* Country filter */}
-              {(rows?.length ?? 0) > 0 && availableCountries.length > 1 && (
-                <div className="mb-4 flex items-center gap-2">
-                  <Globe2 className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-                  <label className="text-xs text-muted-foreground">
-                    {t.leaderboardPage.filterCountry}:
-                  </label>
-                  <select
-                    value={countryFilter}
-                    onChange={(e) => setCountryFilter(e.target.value)}
-                    className="rounded-md border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="all">{t.leaderboardPage.filterAll}</option>
-                    {availableCountries.map((c) => (
-                      <option key={c} value={c}>
-                        {COUNTRY_FLAGS[c] ?? "🌍"} {c}
-                      </option>
-                    ))}
-                  </select>
+              {/* Filters */}
+              {(rows?.length ?? 0) > 0 && (
+                <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+                  {availableCountries.length > 1 && (
+                    <div className="flex items-center gap-2">
+                      <Globe2
+                        className="h-3.5 w-3.5 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      <label className="text-xs text-muted-foreground">
+                        {t.leaderboardPage.filterCountry}:
+                      </label>
+                      <select
+                        value={countryFilter}
+                        onChange={(e) => {
+                          setCountryFilter(e.target.value);
+                          // Сброс города при смене страны
+                          setCityFilter("all");
+                        }}
+                        className="rounded-md border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                      >
+                        <option value="all">{t.leaderboardPage.filterAll}</option>
+                        {availableCountries.map((c) => (
+                          <option key={c} value={c}>
+                            {COUNTRY_FLAGS[c] ?? "🌍"} {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {availableCities.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground">
+                        {t.leaderboardPage.colCity}:
+                      </label>
+                      <select
+                        value={cityFilter}
+                        onChange={(e) => setCityFilter(e.target.value)}
+                        className="rounded-md border border-input bg-background px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                      >
+                        <option value="all">{t.leaderboardPage.filterAll}</option>
+                        {availableCities.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
               )}
 

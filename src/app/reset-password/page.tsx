@@ -32,7 +32,15 @@ export default function ResetPasswordPage() {
     setSubmitting(true);
     const result = await updatePassword(password);
     if (result.error) {
-      setError(t.auth.resetError);
+      const msg = result.error.toLowerCase();
+      // Supabase: "New password should be different from the old password"
+      // или code "same_password" — отдельное сообщение чтобы не путать
+      // пользователя с "ссылка устарела".
+      const isSamePassword =
+        msg.includes("different from the old") ||
+        msg.includes("same_password") ||
+        msg.includes("same password");
+      setError(isSamePassword ? t.auth.samePasswordError : t.auth.resetError);
       setSubmitting(false);
       return;
     }

@@ -7,11 +7,13 @@ import { Copy, Check, Loader2, Users, Flag, Handshake } from "lucide-react";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MoveHistory } from "@/components/chess/MoveHistory";
 import { GameStatus } from "@/components/chess/GameStatus";
+import { PlayerCard, type PlayerInfo } from "@/components/chess/PlayerCard";
 import { Button } from "@/components/ui/Button";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useSupabaseUser } from "@/hooks/use-supabase-user";
 import { useRealtimeRoom } from "@/hooks/use-realtime-room";
 import { joinRoom, appendMove } from "@/lib/multiplayer/room";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import { VoiceController } from "@/components/voice/VoiceController";
 import type { GameOver } from "@/types/chess";
 import type { VoiceCommand } from "@/lib/voice/parser/types";
@@ -38,6 +40,9 @@ export default function OnlineGamePage({ params }: PageProps) {
   const [joinError, setJoinError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [localGameOver, setLocalGameOver] = useState<GameOver | null>(null);
+  const [hostInfo, setHostInfo] = useState<PlayerInfo | null>(null);
+  const [guestInfo, setGuestInfo] = useState<PlayerInfo | null>(null);
+  const [playersLoading, setPlayersLoading] = useState(true);
 
   // Авто-вход + auto-join по invite_code при mount
   useEffect(() => {
@@ -59,6 +64,89 @@ export default function OnlineGamePage({ params }: PageProps) {
   }, [configured, invite, user, ensureSignedIn]);
 
   const { room, moves, loading } = useRealtimeRoom(roomId);
+
+  // Подгружаем display_name + elo + город + ранг для обоих игроков комнаты.
+  // Перезагружаем когда меняется guest_id (гость присоединился) или host_id.
+  useEffect(() => {
+    if (!room || !configured) return;
+    let cancelled = false;
+    setPlayersLoading(true);
+    (async () => {
+      const supabase = getSupabaseClient();
+      const ids = [room.host_id, room.guest_id].filter(
+        (id): id is string => !!id,
+      );
+
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, display_name, elo, city, country, is_pro")
+        .in("id", ids);
+
+      if (cancelled) return;
+
+      const profMap = new Map(
+        (profiles ?? []).map((p) => [p.id, p as {
+          id: string;
+          display_name: string | null;
+          elo: number;
+          city: string | null;
+          country: string;
+          is_pro: boolean;
+        }]),
+      );
+
+      // Получаем ранг каждого игрока через count(*) с большим ELO
+      const buildInfo = async (id: string | null): Promise<PlayerInfo | null> => {
+        if (!id) return null;
+        const p = profMap.get(id);
+        if (!p) {
+          return {
+            displayName: null,
+            elo: null,
+            country: null,
+            city: null,
+            rank: null,
+          };
+        }
+        const { count } = await supabase
+          .from("leaderboard")
+          .select("id", { count: "exact", head: true })
+          .gt("elo", p.elo)
+          .gt("games_played", 0);
+        // Если у игрока ещё нет finished games — он не в leaderboard view
+        // (там фильтр games_played > 0). Проверим: в этом случае rank = null.
+        const { data: meInLb } = await supabase
+          .from("leaderboard")
+          .select("id")
+          .eq("id", id)
+          .gt("games_played", 0)
+          .maybeSingle();
+        return {
+          displayName: p.display_name,
+          elo: p.elo,
+          country: p.country,
+          city: p.city,
+          rank: meInLb ? (count ?? 0) + 1 : null,
+          isPro: p.is_pro,
+        };
+      };
+
+      const [host, guest] = await Promise.all([
+        buildInfo(room.host_id),
+        buildInfo(room.guest_id),
+      ]);
+
+      if (!cancelled) {
+        setHostInfo(host);
+        setGuestInfo(guest);
+        setPlayersLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [room, configured]);
 
   // Восстанавливаем chess.js из room_moves
   const chessState = useMemo(() => {
@@ -343,10 +431,23 @@ export default function OnlineGamePage({ params }: PageProps) {
 
           <div className="grid gap-4 lg:grid-cols-[1fr_320px] lg:gap-6">
             <div className="space-y-3 sm:space-y-4">
-              <GameStatus
-                turn={chessState.turn()}
-                inCheck={inCheck}
-                gameOver={gameOver}
+              {/* Opponent сверху доски (как в chess.com) */}
+              <PlayerCard
+                player={user?.id === room.host_id ? guestInfo : hostInfo}
+                color={
+                  myColor === "w"
+                    ? "black"
+                    : myColor === "b"
+                      ? "white"
+                      : "black"
+                }
+                loading={playersLoading}
+                isCurrentTurn={
+                  !gameOver &&
+                  !isWaiting &&
+                  ((myColor === "w" && chessState.turn() === "b") ||
+                    (myColor === "b" && chessState.turn() === "w"))
+                }
               />
               <ChessBoard
                 position={fen}
@@ -358,6 +459,21 @@ export default function OnlineGamePage({ params }: PageProps) {
                 orientation={orientation}
                 interactive={!gameOver && isMyTurn && !isWaiting}
               />
+              {/* Я — снизу доски */}
+              <PlayerCard
+                player={user?.id === room.host_id ? hostInfo : guestInfo}
+                color={myColor === "b" ? "black" : "white"}
+                isYou
+                loading={playersLoading}
+                isCurrentTurn={!gameOver && !isWaiting && isMyTurn}
+              />
+              {gameOver && (
+                <GameStatus
+                  turn={chessState.turn()}
+                  inCheck={inCheck}
+                  gameOver={gameOver}
+                />
+              )}
             </div>
 
             <aside className="flex flex-col gap-3 sm:gap-4">
